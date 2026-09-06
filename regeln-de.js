@@ -106,6 +106,30 @@ function regelZuSatz(satz) {
   return null;
 }
 
+/* Quizfragen haben kein remember-Feld (122 Fragen, keine einzige).
+   Deshalb wird hier STRENG zugeordnet: nur wenn die Frage UND die
+   Erklaerung der richtigen Antwort zur selben Regel fuehren.
+
+   Warum so streng? Gemessen am 06.09.2026:
+     nur ueber die Frage      111 Treffer, ~1 von 4 falsch
+                              ("Am Automaten klebt ein QR-Code" -> Codes
+                               statt Links, weil das Wort Code gewinnt)
+     nur ueber die Erklaerung  90 Treffer, immer noch ~1 von 4 falsch
+                              ("Die anderen duerfen mitbestimmen" -> Nicht
+                               alles ist wahr, weil in mitbestimmen das
+                               Wort stimmt steckt)
+     beide muessen einig sein  46 Treffer, in der Stichprobe sauber
+   Lieber 46 verlaessliche als 90, von denen jede vierte die falsche
+   Regel gutschreibt. Die uebrigen Fragen zahlen einfach nicht ein. */
+function regelAusQuizfrage(q) {
+  if (!q) return null;
+  if (q.remember) return regelZuSatz(q.remember);
+  const ausFrage = regelZuSatz(q.question);
+  const ausErklaerung = regelZuSatz(q.feedbackCorrect);
+  if (ausFrage && ausErklaerung && ausFrage === ausErklaerung) return ausFrage;
+  return null;
+}
+
 function regelById(id) {
   return REGELN.filter(function (r) { return r.id === id; })[0] || null;
 }

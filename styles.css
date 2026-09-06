@@ -5889,3 +5889,11 @@ button.sz-runde:focus-visible { border-color: var(--accent); }
   font-size: 1.4rem;
   font-weight: 700;
 }
+
+/* Woher kam diese Nachricht? Macht im gemischten Postfach den Bezug
+   zum Thema sichtbar – sonst wirkt es wie ein loser Fragenhaufen. */
+.sz-feedback-herkunft {
+  margin: 10px 0 0;
+  font-size: 0.98rem;
+  color: var(--ink-soft);
+}

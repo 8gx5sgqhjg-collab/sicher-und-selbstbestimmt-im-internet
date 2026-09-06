@@ -4915,7 +4915,14 @@ function renderQuizFeedbackPage(index) {
     ? (q.feedbackCorrect || "Das ist sicher. Du hast gut entschieden.")
     : (falschFeedback(q, index) || "Das ist nicht sicher. Du kannst die Frage noch einmal versuchen.");
   /* Deine Karte: angewendete Regel eintragen (nur bei richtiger Antwort). */
-  const regelHinweis = isCorrect ? regelHinweisHtml(q.remember, topic.id) : "";
+  /* Deine Karte: Quizfragen haben KEIN remember-Feld (122 Fragen, keine
+     einzige). Deshalb wird die Regel aus der Erklaerung der richtigen
+     Antwort gelesen – dort steht die Lehre ("Druck ist ein Warnzeichen"),
+     waehrend die Frage nur die Situation beschreibt. Ueber die Frage zu
+     gehen war messbar schlechter: "Am Automaten klebt ein QR-Code" landete
+     bei den Codes statt bei den Links. Bekommt eine Frage spaeter ein
+     remember, gewinnt das. */
+  const regelHinweis = isCorrect ? regelHinweisHtmlId(regelAusQuizfrage(q), topic.id) : "";
 
   setProgressVisible(false);
   setBottomNavVisible(false);
@@ -5240,18 +5247,73 @@ function renderBigQuizResult() {
    Route: index.html#training
    ============================================================ */
 
+/* Die alten Trainings-Variablen sind seit dem Umbau ohne Aufgabe.
+   Sie bleiben als Platzhalter stehen, damit nichts bricht, das sie
+   noch von aussen anspricht. Der Ablauf nutzt postfach* (siehe unten). */
 let trainingMessages = [];
 let trainingIndex = 0;
 let trainingScore = 0;
+
+/* ============================================================
+   TRAININGS-POSTFACH – der gemischte Alltagstest (Sept 2026)
+   ------------------------------------------------------------
+   Frueher hatte das Postfach eine EIGENE Nachrichtenliste
+   (TRAINING_INBOX in topics.js). Vier davon waren wortgleich mit
+   Szenen des Uebungs-Handys: zwei Angebote, ein Inhalt – und nur
+   eines zahlte auf "Deine Karte" ein.
+
+   Jetzt gibt es EINE Quelle: szenarien-de.js. Die Arbeitsteilung:
+     Uebungs-Handy      ein Thema, geordnet, mit Runden
+     Trainings-Postfach alles gemischt, aber NUR aus Themen, die
+                        die Person schon geschafft hat
+   Dadurch waechst das Postfach mit dem Lernweg – das ist der
+   Zusammenhang zwischen den Angeboten, kein Zusatz-Knopf.
+
+   TRAINING_INBOX bleibt in topics.js stehen, wird aber nicht mehr
+   gelesen.
+   ============================================================ */
+
+let postfachListe  = [];
+let postfachIndex  = 0;
+let postfachRichtig = 0;
+let postfachAntwort = false;
+
+/* Alle Fragen aus den Szenarien der geschafften Themen.
+   Nur freigeschaltete Runden – sonst bekaeme jemand Runde-3-Faelle,
+   ohne Runde 1 und 2 gespielt zu haben. */
+function postfachPool() {
+  const pool = [];
+  topics.forEach(function (t) {
+    if (!isTopicDone(t.id) || !hasScenario(t.id)) return;
+    const scn = getScenario(t.id);
+    const frei = (typeof getStufeFrei === "function") ? getStufeFrei(t.id) : 1;
+    (scn.szenen || []).forEach(function (z) {
+      if (!z.frage) return;
+      if ((Number(z.stufe) || 1) > frei) return;
+      pool.push({ thema: t.id, titel: t.title, kanal: scn.kanal || "Posteingang", szene: z });
+    });
+  });
+  return pool;
+}
+
+const POSTFACH_MAX = 8;
 
 function startTrainingInbox() {
   stopReading();
   setProgressVisible(false);
   setBottomNavVisible(false);
+  showNav(false, false);
   setHeader("Trainings-Postfach", "", "Üben", "", 0);
   setOrientation("Du bist im Trainings-Postfach. Hier kannst du gefahrlos üben.");
   rememberRoute("training");
-  showNav(false, false);
+
+  const pool = postfachPool();
+  const geschafft = topics.filter(function (t) { return isTopicDone(t.id); });
+  const anzahl = Math.min(pool.length, POSTFACH_MAX);
+
+  /* Leeres Postfach ist kein Fehler, sondern der Anfang: Es zeigt,
+     wofuer das Lernen gut ist, statt die Person auszusperren. */
+  const leer = pool.length === 0;
 
   content.innerHTML = `
     ${buildToolRow()}
@@ -5260,17 +5322,34 @@ function startTrainingInbox() {
         <span class="access-box-symbol" aria-hidden="true">${getIconHtml("message")}</span>
         <h2>Trainings-Postfach</h2>
       </div>
-      <p>Hier kannst du üben.</p>
-      <p>Du siehst Nachrichten. So wie auf einem Handy.</p>
-      <p>Du entscheidest: Ist das ein Trick? Oder ist das echt?</p>
-      <div class="access-box remember remember-box">
-        <h3>Wichtig</h3>
-        <p class="remember-text">Alle Nachrichten hier sind erfunden. Sie sind nur zum Üben. Fehler sind erlaubt.</p>
-      </div>
-      <div class="certificate-actions">
-        <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">Üben starten</button>
-        <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
-      </div>
+      ${leer ? `
+        <p>Hier kommt alles durcheinander an. So wie im echten Leben.</p>
+        <p>Dein Postfach ist noch leer.</p>
+        <p>Mach ein Thema fertig. Dann kommen die Nachrichten aus diesem Thema hier an.</p>
+        <div class="access-box remember remember-box">
+          <h3>So wächst dein Postfach</h3>
+          <p class="remember-text">Für jedes Thema, das du schaffst, kommen neue Nachrichten dazu. Je mehr du kannst, desto voller wird es.</p>
+        </div>
+        <div class="certificate-actions">
+          <button type="button" class="quiz-link quiz-button" onclick="renderMenu()">Erstes Thema starten</button>
+          <button type="button" class="nav-button secondary" onclick="renderScenarioChooser()">Zum Übungs-Handy</button>
+        </div>
+      ` : `
+        <p>Hier kommt alles durcheinander an. So wie im echten Leben.</p>
+        <p>Du entscheidest bei jeder Nachricht.</p>
+        <div class="access-box remember remember-box">
+          <h3>Dein Postfach</h3>
+          <p class="remember-text">Du hast ${geschafft.length} ${geschafft.length === 1 ? "Thema" : "Themen"} geschafft. Deshalb liegen ${pool.length} Nachrichten in deinem Postfach.${pool.length > POSTFACH_MAX ? ` Du bekommst ${POSTFACH_MAX} davon – jedes Mal andere.` : ""}</p>
+        </div>
+        <div class="access-box remember remember-box">
+          <h3>Wichtig</h3>
+          <p class="remember-text">Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.</p>
+        </div>
+        <div class="certificate-actions">
+          <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">${anzahl} Nachrichten prüfen</button>
+          <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
+        </div>
+      `}
     </article>
   `;
   focusContent();
@@ -5278,118 +5357,183 @@ function startTrainingInbox() {
 }
 
 function beginTraining() {
-  trainingMessages = TRAINING_INBOX.slice();
-  for (let i = trainingMessages.length - 1; i > 0; i--) {
+  const pool = postfachPool();
+  for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [trainingMessages[i], trainingMessages[j]] = [trainingMessages[j], trainingMessages[i]];
+    const h = pool[i]; pool[i] = pool[j]; pool[j] = h;
   }
-  trainingIndex = 0;
-  trainingScore = 0;
+  postfachListe = pool.slice(0, POSTFACH_MAX);
+  postfachIndex = 0;
+  postfachRichtig = 0;
   renderTrainingMessage();
+}
+
+function postfachScreen(eintrag) {
+  const inhalt = (eintrag.szene.inhalt || []).map(scenarioElementHtml).join("");
+  return `
+    <p class="sz-fake-band">Das ist nicht echt. Das ist nur zum Üben.</p>
+    <div class="phone">
+      <p class="phone-bar">${escapeHtml(eintrag.kanal)}</p>
+      <div class="phone-screen">${inhalt}</div>
+    </div>`;
 }
 
 function renderTrainingMessage() {
   stopReading();
-  if (trainingIndex >= trainingMessages.length) return renderTrainingResult();
-  const msg = trainingMessages[trainingIndex];
-  const total = trainingMessages.length;
-  const progress = Math.round((trainingIndex / total) * 100);
+  if (!postfachListe.length) return startTrainingInbox();
+  if (postfachIndex >= postfachListe.length) return renderTrainingResult();
+
+  const eintrag = postfachListe[postfachIndex];
+  const frage = eintrag.szene.frage;
+  const total = postfachListe.length;
+  postfachAntwort = false;
 
   setProgressVisible(false);
   setBottomNavVisible(false);
-  setHeader("Trainings-Postfach", `Nachricht ${trainingIndex + 1} von ${total}`, "Nachricht", "Üben", progress);
-  setOrientation(`Du übst im Trainings-Postfach. Nachricht ${trainingIndex + 1} von ${total}.`);
   showNav(false, false);
+  setHeader("Trainings-Postfach", `Nachricht ${postfachIndex + 1} von ${total}`, "Nachricht", "Üben",
+            Math.round((postfachIndex / total) * 100));
+  setOrientation(`Du übst im Trainings-Postfach. Nachricht ${postfachIndex + 1} von ${total}.`);
+
+  const antworten = (frage.answers || []).map(function (a, i) {
+    return `<button type="button" class="answer-option sz-answer" data-index="${i}">${answerNumBadge(i)}<span class="answer-text">${escapeHtml(answerText(a))}</span></button>`;
+  }).join("");
 
   content.innerHTML = `
     ${buildToolRow()}
-    <article class="card training-card" data-readable="true">
-      <p class="training-count">Nachricht ${trainingIndex + 1} von ${total}</p>
-      <div class="training-msg">
-        <p class="training-msg-head"><strong>${escapeHtml(msg.channel)}</strong> von: ${escapeHtml(msg.from)}</p>
-        <p class="training-msg-text">${escapeHtml(msg.text)}</p>
+    <article class="card scenario-card" style="${getTopicColorStyle(eintrag.thema)}" data-readable="true">
+      <p class="sz-count">Nachricht ${postfachIndex + 1} von ${total}</p>
+      ${postfachScreen(eintrag)}
+      <div class="sz-frage">
+        ${questionPikto(frage)}<p class="sz-frage-text">${escapeHtml(frage.question || "")}</p>
+        <div class="answers">${antworten}</div>
       </div>
-      <p class="quiz-question">Was denkst du: Ist das ein Trick?</p>
-      <div class="answers">
-        <button type="button" class="answer-option" onclick="answerTraining(true)">${answerNumBadge(0)}<span class="answer-text">Das ist ein Trick.</span></button>
-        <button type="button" class="answer-option" onclick="answerTraining(false)">${answerNumBadge(1)}<span class="answer-text">Das ist echt.</span></button>
+      <div id="szFeedback" class="sz-feedback is-hidden" role="status" aria-live="polite"></div>
+      <div class="certificate-actions sz-exit">
+        <button type="button" class="nav-button secondary" onclick="startTrainingInbox()">Üben beenden</button>
       </div>
     </article>
   `;
+
+  content.querySelectorAll(".sz-answer").forEach(function (btn) {
+    btn.addEventListener("click", function () { answerTraining(Number(btn.dataset.index)); });
+  });
+
   focusContent();
   renderLegalFooter();
 }
 
-function answerTraining(saysTrick) {
-  stopReading();
-  const msg = trainingMessages[trainingIndex];
-  const isCorrect = saysTrick === Boolean(msg.isTrick);
-  if (isCorrect) {
-    trainingScore += 1;
-    playSound("correct");
-  } else {
-    playSound("wrong");
-  }
+function answerTraining(index) {
+  if (postfachAntwort) return;
+  const eintrag = postfachListe[postfachIndex];
+  if (!eintrag) return;
+  const frage = eintrag.szene.frage;
+  const szene = eintrag.szene;
 
-  const feedbackClass = isCorrect ? "feedback-correct" : "feedback-wrong";
-  const feedbackTitle = isCorrect
-    ? "✓ Richtig erkannt!"
-    : (msg.isTrick ? "✗ Das war ein Trick." : "✗ Das war eine echte Nachricht.");
+  postfachAntwort = true;
+  const richtig = index === Number(frage.correctIndex ?? 0);
+  if (richtig) postfachRichtig += 1;
+  playSound(richtig ? "correct" : "wrong");
 
-  content.innerHTML = `
-    ${buildToolRow()}
-    <article class="card training-card" data-readable="true">
-      <div class="training-msg">
-        <p class="training-msg-head"><strong>${escapeHtml(msg.channel)}</strong> von: ${escapeHtml(msg.from)}</p>
-        <p class="training-msg-text">${escapeHtml(msg.text)}</p>
-      </div>
-      <p class="${feedbackClass}">${feedbackTitle}</p>
-      <p>${escapeHtml(msg.explanation)}</p>
-      ${isCorrect ? "" : "<p>Gut, dass du hier übst. Beim Üben lernst du.</p>"}
-      <div class="certificate-actions">
-        <button type="button" class="quiz-link quiz-button" onclick="nextTrainingMessage()">Weiter</button>
-      </div>
-    </article>
-  `;
-  focusContent();
-  renderLegalFooter();
+  content.querySelectorAll(".sz-answer").forEach(function (b, i) {
+    b.disabled = true;
+    if (i === index) b.classList.add(richtig ? "is-correct" : "is-wrong");
+    if (!richtig && i === Number(frage.correctIndex ?? 0)) b.classList.add("is-correct");
+  });
+
+  const text = richtig
+    ? (frage.feedbackCorrect || "Das war sicher. Gut gemacht.")
+    : (falschFeedback(frage, index) || "Das ist nicht sicher. Schau noch einmal.");
+
+  /* Deine Karte: das Postfach zahlt jetzt genauso ein wie das Übungs-Handy.
+     Das Herkunfts-Thema zaehlt – so entsteht der Transfer ueber Themen. */
+  const regelHinweis = richtig ? regelHinweisHtml(frage.remember, eintrag.thema) : "";
+
+  const schwerHtml = szene.schwer
+    ? `<p class="sz-schwer">Die war schwer. Da fallen viele darauf herein.</p>` : "";
+
+  const falle = szene.falle;
+  const falleHtml = falle
+    ? `<div class="sz-falle">
+         <p class="sz-falle-band">Das ist nur ein Bild. Hier passiert nichts.</p>
+         <div class="phone phone--falle">
+           <p class="phone-bar">Diese Seite geht auf</p>
+           <div class="phone-screen">${(falle.inhalt || []).map(scenarioElementHtml).join("")}</div>
+         </div>
+         <p class="sz-falle-text">${escapeHtml(richtig ? (falle.text || "") : (falle.textFalsch || falle.text || ""))}</p>
+       </div>`
+    : "";
+
+  const letzte = postfachIndex >= postfachListe.length - 1;
+  const feld = document.getElementById("szFeedback");
+  if (!feld) return;
+  feld.className = "sz-feedback " + (richtig ? "is-correct" : "is-wrong");
+  feld.innerHTML = `
+    <p class="sz-feedback-kopf">${richtig ? "Richtig." : "Noch nicht sicher."}</p>
+    ${schwerHtml}
+    ${falleHtml}
+    <p class="sz-feedback-text">${escapeHtml(text)}</p>
+    ${frage.remember ? `<p class="sz-feedback-merk">Merksatz: ${escapeHtml(frage.remember)}</p>` : ""}
+    ${regelHinweis}
+    <p class="sz-feedback-herkunft">Diese Nachricht kommt aus dem Thema: ${escapeHtml(eintrag.titel)}.</p>
+    <div class="certificate-actions">
+      <button type="button" class="nav-button primary" onclick="nextTrainingMessage()">${letzte ? "Zum Ergebnis" : "Weiter"}</button>
+    </div>`;
+  const weiter = feld.querySelector("button");
+  if (weiter) weiter.focus();
 }
 
 function nextTrainingMessage() {
-  trainingIndex += 1;
+  postfachIndex += 1;
   renderTrainingMessage();
 }
 
 function renderTrainingResult() {
   stopReading();
-  const total = trainingMessages.length || 1;
+  const total = postfachListe.length || 1;
   playSound("success");
 
   setProgressVisible(false);
   setBottomNavVisible(false);
+  showNav(false, false);
   setHeader("Trainings-Postfach", "Ergebnis", "Ergebnis", "Fertig", 100);
   setOrientation("Geschafft! Du hast im Trainings-Postfach geübt.");
-  showNav(false, false);
 
-  const praise = trainingScore === total
+  const lob = postfachRichtig === total
     ? "Alle richtig erkannt. Das war stark!"
-    : trainingScore >= Math.ceil(total / 2)
+    : postfachRichtig >= Math.ceil(total / 2)
       ? "Das war schon sehr gut. Jedes Üben macht dich sicherer."
-      : "Gut, dass du geübt hast. Tricks zu erkennen ist schwer. Übe einfach nochmal.";
+      : "Gut, dass du geübt hast. Das ist schwer. Du kannst es gleich noch einmal machen.";
+
+  const themen = [];
+  postfachListe.forEach(function (e) { if (themen.indexOf(e.titel) === -1) themen.push(e.titel); });
+
+  const offene = topics.filter(function (t) { return !isTopicDone(t.id) && hasScenario(t.id); });
+  const waechst = offene.length > 0
+    ? `<div class="access-box remember remember-box">
+         <h3>Dein Postfach kann noch wachsen</h3>
+         <p class="remember-text">Es fehlen noch ${offene.length} ${offene.length === 1 ? "Thema" : "Themen"}. Für jedes Thema, das du schaffst, kommen neue Nachrichten dazu.</p>
+       </div>`
+    : `<div class="access-box remember remember-box">
+         <h3>Dein Postfach ist voll</h3>
+         <p class="remember-text">Du hast alle Themen geschafft. Hier kommt jetzt alles an, was es gibt.</p>
+       </div>`;
 
   content.innerHTML = `
     ${buildToolRow()}
     <article class="card quiz-result-card" data-readable="true">
-      <h2>Trainings-Postfach – Fertig!</h2>
-      <p>Du hast ${trainingScore} von ${total} Nachrichten richtig erkannt.</p>
-      <p>${escapeHtml(praise)}</p>
+      <h2>Trainings-Postfach – fertig!</h2>
+      <p>Du hast ${postfachRichtig} von ${total} Nachrichten sicher entschieden.</p>
+      <p>${escapeHtml(lob)}</p>
+      ${themen.length ? `<p>Die Nachrichten kamen aus: ${escapeHtml(themen.join(", "))}.</p>` : ""}
+      ${waechst}
       <div class="access-box remember remember-box">
         <h3>Wichtig</h3>
         <p class="remember-text">Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.</p>
       </div>
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">Noch einmal üben</button>
-        <button type="button" class="nav-button secondary" onclick="renderTopicChoice('betrug')">Zum Thema Betrug</button>
+        <button type="button" class="nav-button secondary" onclick="renderRegelKarte()">Deine Karte ansehen</button>
         <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
       </div>
     </article>
@@ -6431,9 +6575,14 @@ function regelZaehlung() {
 /* Traegt eine angewendete Regel ein. Gibt zurueck, was sich geaendert hat:
    null | { regel, neu: true } | { regel, jetztSicher: true } */
 function regelAnwenden(satz, themaId) {
-  if (typeof regelZuSatz !== "function" || !themaId) return null;
-  const rid = regelZuSatz(satz);
-  if (!rid) return null;
+  if (typeof regelZuSatz !== "function") return null;
+  return regelAnwendenId(regelZuSatz(satz), themaId);
+}
+
+/* Gleiche Wirkung, aber mit fertiger Regel-Kennung – fuer das Quiz,
+   das seine Regel ueber regelAusQuizfrage() streng ermittelt. */
+function regelAnwendenId(rid, themaId) {
+  if (!rid || !themaId) return null;
   const vorher = regelStufe(rid);
 
   sessionRegeln[rid] = sessionRegeln[rid] || {};
@@ -6460,7 +6609,11 @@ function regelAnwenden(satz, themaId) {
 /* Rueckmeldung im Feedback – der Belohnungsmoment. Traegt gleichzeitig ein.
    Nur bei richtiger Antwort aufrufen. */
 function regelHinweisHtml(satz, themaId) {
-  const erg = regelAnwenden(satz, themaId);
+  return regelHinweisHtmlId((typeof regelZuSatz === "function") ? regelZuSatz(satz) : null, themaId);
+}
+
+function regelHinweisHtmlId(rid, themaId) {
+  const erg = regelAnwendenId(rid, themaId);
   if (!erg) return "";
   const bild = getPictogramHtml ? getPictogramHtml(erg.regel.pikto) : "";
   const z = regelZaehlung();

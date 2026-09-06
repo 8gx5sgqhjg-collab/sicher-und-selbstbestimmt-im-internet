@@ -1032,3 +1032,122 @@ const SCENARIOS = {
 
   b.abschluss = "Du hast geprüft und entschieden. Genau so kannst du es bei echten Nachrichten machen.";
 })();
+
+/* =============================================================
+   AUS DEM TRAININGS-POSTFACH GERETTET (Sept 2026)
+   -------------------------------------------------------------
+   Das Trainings-Postfach hatte eine EIGENE Nachrichtenliste
+   (TRAINING_INBOX in topics.js). Vier ihrer Nachrichten waren
+   wortgleich mit Szenen aus dem Übungs-Handy – zwei Angebote mit
+   demselben Inhalt, und nur eines zahlte auf "Deine Karte" ein.
+
+   Ab jetzt hat das Postfach keine eigenen Daten mehr: Es mischt
+   Fragen aus DIESEN Szenarien. Damit dabei nichts verlorengeht,
+   ziehen die Nachrichten, die es nur dort gab, hier ein – mit
+   Merksatz, damit sie auf die Karte einzahlen.
+
+   Nicht übernommen wurde die Lotto-Gewinn-Nachricht: die steht
+   inhaltlich schon als Szene in Runde 1 von "betrug".
+   TRAINING_INBOX bleibt in topics.js unangetastet stehen, wird
+   aber nicht mehr benutzt.
+   ============================================================= */
+
+(function rettePostfachNachrichten() {
+  if (typeof SCENARIOS === "undefined") return;
+
+  /* --- WhatsApp: zwei echte Nachrichten. Wichtig fuers Augenmass:
+         Wer nur Tricks sieht, wird misstrauisch gegen alles. --- */
+  if (SCENARIOS.whatsapp) {
+    SCENARIOS.whatsapp.szenen.push(
+      {
+        inhalt: [{ typ: "nachricht", von: "Anna", text: "Hallo! Kommst du am Samstag zum Kaffee? Ich freue mich. Liebe Grüße, Anna", zeit: "15:20" }],
+        frage: {
+          question: "Trick oder echt?",
+          pictogram: "pikto-friend",
+          answers: ["Das ist ein Trick.", "Das ist echt."],
+          correctIndex: 1,
+          feedbackCorrect: "Genau. Die Nachricht kommt von einer Person, die du kennst. Sie will kein Geld. Sie macht keinen Druck.",
+          feedbackWrong: "Schau noch einmal: Du kennst Anna. Sie will kein Geld. Sie macht keinen Druck. Das ist eine normale Nachricht.",
+          remember: "Kein Geld und kein Druck von einer Person, die ich kenne: das ist normal."
+        }
+      },
+      {
+        inhalt: [{ typ: "nachricht", von: "Wohn-Gruppe", text: "Erinnerung an alle: Morgen um 15 Uhr ist unser Treffen im Gemeinschaftsraum.", zeit: "18:05" }],
+        frage: {
+          question: "Trick oder echt?",
+          pictogram: "pikto-people",
+          answers: ["Das ist ein Trick.", "Das ist echt."],
+          correctIndex: 1,
+          feedbackCorrect: "Richtig. Eine Erinnerung aus deiner Gruppe. Kein Link, kein Geld, keine Eile.",
+          feedbackWrong: "Diese Nachricht kommt aus deiner Gruppe. Sie will nichts von dir. Sie ist echt.",
+          remember: "Ich prüfe: Will die Nachricht etwas von mir?"
+        }
+      }
+    );
+  }
+
+  /* --- Einkaufen: echte Bestell-Bestaetigung --- */
+  if (SCENARIOS.einkaufen) {
+    SCENARIOS.einkaufen.szenen.push({
+      inhalt: [{ typ: "liste", eintraege: [
+        { von: "E-Mail · bestellung@musterschuhe.de", vorschau: "Danke für deine Bestellung. Deine Schuhe kommen am Donnerstag. Du kannst alles in deinem Konto ansehen.", zeit: "09:15" }
+      ] }],
+      frage: {
+        question: "Trick oder echt?",
+        pictogram: "pikto-shop",
+        answers: ["Das ist ein Trick.", "Das ist echt."],
+        correctIndex: 1,
+        feedbackCorrect: "Genau. Du hast dort wirklich bestellt. Die Mail will kein Geld und macht keinen Druck.",
+        feedbackWrong: "Frag dich zuerst: Habe ich dort bestellt? Wenn ja, und die Mail will kein Geld: dann ist sie echt.",
+        remember: "Ich frage mich: Habe ich das wirklich bestellt?"
+      }
+    });
+  }
+
+  /* --- Betrug, Runde 2: zwei gut gemachte Tricks --- */
+  if (SCENARIOS.betrug) {
+    SCENARIOS.betrug.szenen.push(
+      {
+        stufe: 2, schwer: true,
+        inhalt: [{ typ: "liste", eintraege: [
+          { von: "SMS · Unbekannte Nummer", vorschau: "Hallo! Ich habe dir aus Versehen einen Code geschickt. Kannst du ihn mir bitte kurz weiterleiten?", zeit: "14:33" }
+        ] }],
+        frage: {
+          question: "Trick oder echt?",
+          pictogram: "pikto-code",
+          answers: ["Das ist ein Trick.", "Das ist echt."],
+          correctIndex: 0,
+          feedbackCorrect: "Richtig. Niemand schickt aus Versehen einen Code. Wer danach fragt, will in dein Konto.",
+          feedbackWrong: "Ein Code kommt nie aus Versehen bei dir an. Der Absender will damit in dein Konto.",
+          remember: "Meine Codes sage ich niemandem. Auch nicht am Telefon."
+        },
+        falle: {
+          inhalt: [{ typ: "hinweis", text: "Du schickst den Code. Der Absender meldet sich damit in deinem Konto an. Der Code war der Schlüssel." }],
+          text: "Schau: Der Code war der Schlüssel zu deinem Konto. Deshalb hat jemand danach gefragt.",
+          textFalsch: "So geht die Falle aus. Der Code ist der Schlüssel zu deinem Konto. Wer ihn hat, kommt hinein."
+        }
+      },
+      {
+        stufe: 2,
+        inhalt: [{ typ: "liste", eintraege: [
+          { von: "SMS · Stream-Dienst", vorschau: "Ihr Konto ist abgelaufen. Aktualisieren Sie sofort Ihre Bank-Daten, sonst wird gekündigt.", zeit: "21:10" }
+        ] }],
+        frage: {
+          question: "Trick oder echt?",
+          pictogram: "pikto-warning",
+          answers: ["Das ist ein Trick.", "Das ist echt."],
+          correctIndex: 0,
+          feedbackCorrect: "Richtig. Sofort und sonst: das ist Druck. Und niemand fragt per SMS nach Bank-Daten.",
+          feedbackWrong: "Achte auf das Wort sofort und auf die Drohung. Und: Bank-Daten gibt man nie per SMS.",
+          remember: "Druck und die Frage nach Bank-Daten: immer ein Trick."
+        },
+        falle: {
+          inhalt: [{ typ: "webseite", adresse: "stream-konto-verlaengern.xyz", titel: "Konto verlängern",
+                     felder: ["Kontonummer", "Bank-Leitzahl"], knopf: "Jetzt verlängern" }],
+          text: "Schau: Die Seite will deine Bank-Daten. Der Stream-Dienst hat damit nichts zu tun.",
+          textFalsch: "So sieht die Falle aus. Die Seite will deine Bank-Daten. Der echte Dienst fragt so nie."
+        }
+      }
+    );
+  }
+})();
