@@ -953,17 +953,19 @@ html.no-motion *::after {
 .topic-card {
   position: relative; /* für Abzeichen und Häkchen */
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "icon badge read"
-    "icon title read"
-    "icon desc  read"
-    "icon done  read";
+    "icon badge"
+    "icon title"
+    "icon desc"
+    "icon done";
   align-items: center;
   column-gap: 13px;
   row-gap: 1px;
   text-align: left;
-  padding: 11px 13px;
+  /* rechts bleibt der Platz fuer den Vorlese-Knopf frei: 13 + 46 + 13 px.
+     Der Knopf liegt jetzt NEBEN der Karte (Geschwister), nicht mehr darin. */
+  padding: 11px 72px 11px 13px;
   min-height: 66px;
   background: var(--surface);
   border: 2px solid var(--line);
@@ -1054,12 +1056,48 @@ html.no-motion *::after {
   line-height: 1.35;
 }
 
-/* Vorlese-Knopf auf jeder Kachel gleich: volle Breite, unten bündig –
-   so sehen alle „Vorlesen"-Balken identisch aus und stehen auf einer Linie. */
-.topic-card .card-read-button {
-  width: 100%;
-  justify-content: center;
-  margin-top: auto;   /* nach unten andocken */
+/* ---------- Karte und Vorlese-Knopf als getrennte Geschwister ----------
+   Frueher steckte der Vorlese-Knopf ALS <span role="button"> IN der Karte,
+   die selbst ein <button> ist. Ein Knopf im Knopf ist ungueltiges HTML:
+   Tastatur und Screenreader behandeln das je nach Programm anders, und ein
+   Klick auf Vorlesen konnte die Karte mit oeffnen. Jetzt sind es zwei echte
+   Knoepfe nebeneinander; das Paar-Element haelt nur die Position, damit die
+   Optik gleich bleibt (WCAG 2.2: 4.1.2 Name/Rolle/Wert, 2.1.1 Tastatur). */
+.card-read-pair {
+  position: relative;
+  display: grid;   /* Karte fuellt die Zelle -> gleich hohe Kacheln bleiben */
+}
+
+.card-read-pair--topic .card-read-button {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+}
+
+/* Beim Zeigen/Fokus hebt sich die Karte um 3 px – der Knopf geht mit,
+   damit beide zusammen bleiben. Ohne :has()-Unterstuetzung bleibt er
+   einfach stehen; die Bedienung aendert sich dadurch nicht. */
+.card-read-pair--topic:has(.topic-card:hover) .card-read-button,
+.card-read-pair--topic:has(.topic-card:focus-visible) .card-read-button {
+  transform: translateY(-50%) translateY(-3px);
+}
+
+/* Aktions-Karten (Mein Lernweg, Übungs-Handy): Knopf unten, in einer Linie
+   mit dem Text – 18 px Rand + 52 px Symbol + 14 px Abstand. */
+.card-read-pair--action .action-card { padding-bottom: 74px; }
+.card-read-pair--action .card-read-button {
+  position: absolute;
+  left: 84px;
+  bottom: 18px;
+}
+
+/* Sprach-Finder: Knopf bleibt unten links unter dem Beispiel-Text. */
+.card-read-pair--sample .sample-option { padding-bottom: 74px; }
+.card-read-pair--sample .card-read-button {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
 }
 
 /* Geschafft-Abzeichen auf Themen-Karten */
@@ -5202,7 +5240,7 @@ body.simple-mode .practice-box {
 .topic-card .topic-title { grid-area: title; align-self: end;  font-size: 1.05rem; line-height: 1.25; }
 .topic-card .topic-desc  { grid-area: desc;  align-self: start; font-size: 0.87rem; line-height: 1.3; }
 .topic-card .topic-done-badge { grid-area: done; justify-self: start; margin-top: 3px; }
-.topic-card .card-read-button { grid-area: read; }
+
 
 /* Symbol-Feld in der Zeile: fest, quadratisch, nicht mitwachsend */
 .topic-card .topic-icon {
@@ -5227,12 +5265,12 @@ body.simple-mode .practice-box {
   margin: 0 0 2px;
 }
 
-/* Der Vorlese-Knopf bleibt pro Thema erhalten (§1) – er passt in der Zeile
-   neben den Text und kostet keine zusaetzliche Hoehe mehr.
+/* Der Vorlese-Knopf bleibt pro Thema erhalten (§1) – er steht rechts neben
+   dem Text und kostet keine zusaetzliche Hoehe.
    Wichtig: collectReadableText() ueberspringt alles in <button>, und die
    Zeile IST ein Button. Ohne diesen Knopf waeren die Themennamen nicht
    vorlesbar. */
-.topic-card .card-read-button {
+.card-read-pair--topic .card-read-button {
   flex: none;
   width: 46px;
   height: 46px;

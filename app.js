@@ -2352,10 +2352,12 @@ function renderSampleFinder(round) {
      nicht nach Etikett. Reihenfolge wird gemischt. */
   const options = shuffleArray(["leicht", "einfach", "standard"]);
   const cards = options.map(level => `
-    <button type="button" class="sample-option" onclick="pickSample(${round}, '${level}')">
+    <div class="card-read-pair card-read-pair--sample">
+      <button type="button" class="sample-option" onclick="pickSample(${round}, '${level}')">
       <span class="sample-text">„${escapeHtml(r[level])}"</span>
-      <span class="card-read-button" role="button" tabindex="0" data-read-card-text="${escapeHtml(r[level])}" aria-label="Text vorlesen"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-    </button>`).join("");
+      </button>
+      <button type="button" class="card-read-button" data-read-card-text="${escapeHtml(r[level])}" aria-label="Text vorlesen"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>`).join("");
   const back = round > 0 ? `renderSampleFinder(${round - 1})` : `renderStart()`;
 
   content.innerHTML = `
@@ -2804,17 +2806,19 @@ function renderMenu() {
     const done = isTopicDone(topic.id);
     const suggested = !done && nextSuggestion && topic.id === nextSuggestion.id;
     return `
-    <button type="button" class="topic-card topic-${escapeHtml(topic.id)}${done ? " topic-card--done" : ""}" style="${getTopicColorStyle(topic.id)}" onclick="renderTopicChoice('${escapeHtml(topic.id)}')">
+    <div class="card-read-pair card-read-pair--topic">
+      <button type="button" class="topic-card topic-${escapeHtml(topic.id)}${done ? " topic-card--done" : ""}" style="${getTopicColorStyle(topic.id)}" onclick="renderTopicChoice('${escapeHtml(topic.id)}')">
       ${suggested ? `<span class="topic-start-badge">${anyTopicDone ? "Dein nächstes Thema" : "Starte hier"}</span>` : ""}
       ${done ? `<span class="topic-done-corner" aria-label="Geschafft" title="Geschafft">✓</span>` : ""}
       <span class="topic-icon" aria-hidden="true">${getIconHtml(topic.icon || "start")}</span>
       <span class="topic-title">${escapeHtml(topic.title)}</span>
       <span class="topic-desc">${escapeHtml(topic.desc || "")}</span>
       ${done ? `<span class="topic-done-badge">✓ Geschafft</span>` : ""}
-      <span class="card-read-button" role="button" tabindex="0" data-read-card-text="${escapeHtml(topic.title)}. ${escapeHtml(topic.desc || "")}" aria-label="Thema ${escapeHtml(topic.title)} vorlesen">
+      </button>
+      <button type="button" class="card-read-button" data-read-card-text="${escapeHtml(topic.title)}. ${escapeHtml(topic.desc || "")}" aria-label="Thema ${escapeHtml(topic.title)} vorlesen">
         <svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
-    </button>
+      </button>
+    </div>
   `;};
 
   /* Gruppen aufbauen; Themen ohne Gruppe landen sicherheitshalber am Ende */
@@ -3073,46 +3077,56 @@ function renderMyPath() {
         <h3 class="topic-grid-title">Zusätzlich üben</h3>
         <p class="topic-grid-hint">Hier kannst du üben. Ganz ohne Druck.</p>
         <div class="action-grid practice-grid">
-          <button type="button" class="action-card" onclick="startBigQuiz()">
+          <div class="card-read-pair card-read-pair--action">
+            <button type="button" class="action-card" onclick="startBigQuiz()">
             <span class="action-icon" aria-hidden="true">${getIconHtml("quiz")}</span>
             <span class="action-text">
               <span class="action-title">Das große Quiz</span>
               <span class="action-desc">Fragen aus allen Themen.</span>
-              <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="Das große Quiz. Fragen aus allen Themen." aria-label="Das große Quiz vorlesen">${readCardSvg} Vorlesen</span>
             </span>
           </button>
-          <button type="button" class="action-card" onclick="startRepeatQuiz()">
+            <button type="button" class="card-read-button card-read-button--path" data-read-card-text="Das große Quiz. Fragen aus allen Themen." aria-label="Das große Quiz vorlesen">${readCardSvg} Vorlesen</button>
+          </div>
+          <div class="card-read-pair card-read-pair--action">
+            <button type="button" class="action-card" onclick="startRepeatQuiz()">
             <span class="action-icon" aria-hidden="true">${getIconHtml("exercise")}</span>
             <span class="action-text">
               <span class="action-title">Wiederholen</span>
               <span class="action-desc">Fragen aus deinen Themen.</span>
-              <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="Wiederholen. Fragen aus deinen Themen." aria-label="Wiederholen vorlesen">${readCardSvg} Vorlesen</span>
             </span>
           </button>
-          <button type="button" class="action-card" onclick="renderScenarioChooser()">
+            <button type="button" class="card-read-button card-read-button--path" data-read-card-text="Wiederholen. Fragen aus deinen Themen." aria-label="Wiederholen vorlesen">${readCardSvg} Vorlesen</button>
+          </div>
+          <div class="card-read-pair card-read-pair--action">
+            <button type="button" class="action-card" onclick="renderScenarioChooser()">
             <span class="action-icon" aria-hidden="true">${getIconHtml("start")}</span>
             <span class="action-text">
               <span class="action-title">Übungs-Handy</span>
               <span class="action-desc">Üben wie auf dem Handy.</span>
-              <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="Übungs-Handy. Üben wie auf dem Handy." aria-label="Übungs-Handy vorlesen">${readCardSvg} Vorlesen</span>
             </span>
           </button>
-          <button type="button" class="action-card" onclick="startTrainingInbox()">
+            <button type="button" class="card-read-button card-read-button--path" data-read-card-text="Übungs-Handy. Üben wie auf dem Handy." aria-label="Übungs-Handy vorlesen">${readCardSvg} Vorlesen</button>
+          </div>
+          <div class="card-read-pair card-read-pair--action">
+            <button type="button" class="action-card" onclick="startTrainingInbox()">
             <span class="action-icon" aria-hidden="true">${getIconHtml("message")}</span>
             <span class="action-text">
               <span class="action-title">Trainings-Postfach</span>
               <span class="action-desc">Trick oder echt? Gefahrlos üben.</span>
-              <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="Trainings-Postfach. Trick oder echt? Gefahrlos üben." aria-label="Trainings-Postfach vorlesen">${readCardSvg} Vorlesen</span>
             </span>
           </button>
-          <button type="button" class="action-card" onclick="renderAllMemoryCards()">
+            <button type="button" class="card-read-button card-read-button--path" data-read-card-text="Trainings-Postfach. Trick oder echt? Gefahrlos üben." aria-label="Trainings-Postfach vorlesen">${readCardSvg} Vorlesen</button>
+          </div>
+          <div class="card-read-pair card-read-pair--action">
+            <button type="button" class="action-card" onclick="renderAllMemoryCards()">
             <span class="action-icon" aria-hidden="true">${getIconHtml("remember")}</span>
             <span class="action-text">
               <span class="action-title">Alle Merk-Karten</span>
               <span class="action-desc">Alle Regeln ansehen.</span>
-              <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="Alle Merk-Karten. Alle Regeln ansehen." aria-label="Alle Merk-Karten vorlesen">${readCardSvg} Vorlesen</span>
             </span>
           </button>
+            <button type="button" class="card-read-button card-read-button--path" data-read-card-text="Alle Merk-Karten. Alle Regeln ansehen." aria-label="Alle Merk-Karten vorlesen">${readCardSvg} Vorlesen</button>
+          </div>
         </div>
       </section>
 
@@ -5740,14 +5754,16 @@ function renderScenarioChooser() {
       const scn = getScenario(t.id);
       const text = `${t.title}. ${scn.titel}.`;
       return `
-        <button type="button" class="action-card" style="${getTopicColorStyle(t.id)}" onclick="startScenario('${escapeHtml(t.id)}')">
+        <div class="card-read-pair card-read-pair--action">
+          <button type="button" class="action-card" style="${getTopicColorStyle(t.id)}" onclick="startScenario('${escapeHtml(t.id)}')">
           <span class="action-icon" aria-hidden="true">${getIconHtml(t.icon || "start")}</span>
           <span class="action-text">
             <span class="action-title">${escapeHtml(t.title)}</span>
             <span class="action-desc">${escapeHtml(scn.titel)}</span>
-            <span class="card-read-button card-read-button--path" role="button" tabindex="0" data-read-card-text="${escapeHtml(text)}" aria-label="${escapeHtml(t.title)} vorlesen">${READ_CARD_SVG} Vorlesen</span>
           </span>
-        </button>`;
+        </button>
+          <button type="button" class="card-read-button card-read-button--path" data-read-card-text="${escapeHtml(text)}" aria-label="${escapeHtml(t.title)} vorlesen">${READ_CARD_SVG} Vorlesen</button>
+        </div>`;
     }).join("");
 
   content.innerHTML = `
@@ -6384,7 +6400,14 @@ function handleReadCardEvent(event) {
   event.stopImmediatePropagation();
 
   const text = button.getAttribute("data-read-card-text") || button.getAttribute("data-read-card-title");
-  const block = button.closest(".ls-text-block, .ls-bullet-block, .access-box, .action-card, .topic-card, .sample-option, .language-card");
+  /* Die Karte ist jetzt GESCHWISTER des Vorlese-Knopfes (nicht mehr Elternteil):
+     closest() findet sie nicht mehr, deshalb der Griff ueber das Paar-Element.
+     Damit bleibt die Hervorhebung beim Mitlesen auf der Karte. */
+  let block = button.closest(".ls-text-block, .ls-bullet-block, .access-box, .action-card, .topic-card, .sample-option, .language-card");
+  if (!block) {
+    const pair = button.closest(".card-read-pair");
+    if (pair) block = pair.querySelector(".topic-card, .action-card, .sample-option");
+  }
   readShortText(text, block);
 }
 
