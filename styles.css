@@ -109,6 +109,14 @@
   /* Hauptmenü (Tab-Leiste): aktive Unterlegung = Tilbeck-Hellblau #d8eaf2.
      Text darauf: --accent-dark #003a66 (Kontrast > 9:1, AA ✓). */
   --tab-active-bg: #d8eaf2;
+  /* Fortschrittsbalken (WCAG 2.2, 1.4.11 Nicht-Text-Kontrast).
+     Die Rinne bleibt weiss, weil die Themenfarben unveraendert bleiben:
+     nur gegen Weiss erreicht jede Fuellung 3:1 (engster Fall WhatsApp
+     #1DA855 = 3,10:1, Snapchat #A88A00 = 3,33:1). Die Form des Balkens
+     traegt deshalb die Kontur: #5b7186 auf --surface = 5,06:1
+     (vorher: Rinne #e3eef7 auf weisser Karte = 1,18:1, also unsichtbar). */
+  --track-bg: #ffffff;
+  --track-line: #5b7186;
   /* In rem, damit das Menü mitwächst, wenn die Schrift auf A+ / A++ steht */
   --tabbar-h: 4.7rem;
 }
@@ -366,7 +374,9 @@ html.no-motion *::after {
 
 .progress-track {
   height: 16px;
-  background: var(--accent-soft);
+  background: var(--track-bg);
+  /* box-sizing: border-box gilt global -> die Hoehe bleibt bei 16 px. */
+  border: 1px solid var(--track-line);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1708,7 +1718,9 @@ html.no-motion *::after {
 .step-bar {
   height: 10px;
   border-radius: 999px;
-  background: var(--line);
+  background: var(--track-bg);
+  /* Gleiche Kontur wie .progress-track, damit beide Balken gleich lesbar sind. */
+  border: 1px solid var(--track-line);
   overflow: hidden;
 }
 
@@ -4846,6 +4858,13 @@ body.simple-mode .practice-box {
 
     /* Hauptmenü: aktive Unterlegung im Dark Mode (Text --accent-dark hell, AA ✓) */
     --tab-active-bg: #152840;
+
+    /* Fortschrittsbalken dunkel: tiefe Rinne, helle Kontur.
+       Schwaechste Fuellung (Instagram #f472b6) gegen Rinne = 6,63:1;
+       Kontur #8aa0b8 gegen --surface = 5,61:1
+       (vorher: Rinne #233448 auf --surface = 1,19:1). */
+    --track-bg:     #0f1a26;
+    --track-line:   #8aa0b8;
 
     /* Schatten stärker auf dunklem Grund */
     --shadow:       0 2px 8px rgba(0,0,0,0.5), 0 14px 32px rgba(0,0,0,0.55);

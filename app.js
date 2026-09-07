@@ -4040,7 +4040,8 @@ function buildStepPath(currentIndex, total) {
     : `<span class="step-done-count">${currentIndex} geschafft</span> · letzter Schritt`;
   return `
     <div class="step-bar-wrap">
-      <div class="step-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+      <div class="step-bar" role="progressbar" aria-label="Dein Fortschritt in diesem Thema"
+           aria-valuemin="0" aria-valuemax="100"
            aria-valuenow="${percent}" aria-valuetext="Schritt ${currentIndex + 1} von ${total}">
         <div class="step-bar-fill" style="width:${percent}%"></div>
       </div>
