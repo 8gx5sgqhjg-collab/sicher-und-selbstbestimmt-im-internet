@@ -4063,6 +4063,31 @@ function buildStepPath(currentIndex, total) {
     </div>`;
 }
 
+/* ============================================================
+   Merksatz-Baustein (Lerndesign-Vorschlag, Stufe 1)
+   Additiv: hebt den Vorlese-Knopf aus renderLesson() unverändert nach
+   global (er nutzt dort nur seinen eigenen Parameter und escapeHtml,
+   siehe Prüfung in docs/lerndesign-vorschlag.md), damit buildRememberBox()
+   ihn mitnutzen kann. renderLesson() behält seine eigene, lokale Kopie
+   für text/bullets/examples/warning/success vorerst unverändert – die
+   Zusammenführung ist ein späterer, eigener Schritt.
+   ============================================================ */
+function blockRead(t) {
+  return t
+    ? `<span class="card-read-button card-read-button--block" role="button" tabindex="0" data-read-card-text="${escapeHtml(t)}" aria-label="Diesen Teil vorlesen"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`
+    : "";
+}
+
+/* Der siebenmal handkopierte Merksatz-Kasten (renderLesson, renderPracticeFeedbackPage,
+   renderCompletionPage x2, renderTrainingMessage x2, renderTrainingResult) als ein
+   Baustein. Rein additiv: kein bestehender Aufrufer nutzt ihn in dieser Stufe.
+   Markup, Klassen und Vorlese-Text sind Zeichen für Zeichen wie in renderLesson. */
+function buildRememberBox(titel, text) {
+  return text
+    ? `<div class="access-box remember remember-box"><h3>${escapeHtml(titel)}</h3><p class="remember-text">${escapeHtml(text)}</p>${blockRead(titel + ". " + text)}</div>`
+    : "";
+}
+
 function renderLesson() {
   stopReading();
   const topic = getCurrentTopic();
