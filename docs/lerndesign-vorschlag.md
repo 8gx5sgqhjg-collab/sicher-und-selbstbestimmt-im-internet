@@ -171,11 +171,49 @@ Nach jeder Stufe läuft die Prüfung aus Abschnitt 6.
 | **0** | ~~**Doku-Fix** (Abschnitt 7). Nur `CLAUDE.md`.~~ **Erledigt 08.09.2026**, eigener Commit. | nein | keins |
 | **1** | ~~Bausteine anlegen: `buildMerksatz()`, `buildProgress()`, `buildWegweiser()`.~~ **Erledigt 08.09.2026, kleiner geschnitten:** nur `buildRememberBox()` (Merksatz), Commit `8e83e32`. Fortschritt/Wegweiser bleiben zurückgestellt. Rein additiv, `node --check app.js` sauber. | nein | sehr klein |
 | **2** | ~~**Pilot.** Nur `renderLesson()` nutzt die Bausteine.~~ **Erledigt 08.09.2026:** `renderLesson()` nutzt `buildRememberBox()` für den "Wichtig"-Kasten, Commit `b183533`. Vorlesen + Mitmarkierung mit Playwright vorher/nachher verglichen, byte-identisch. Die lokale `blockRead`-Closure bleibt — 5 weitere Aufrufer (text/bullets/examples/warning/success) nutzen sie noch. | ja, 1 Kasten auf 1 Screen | klein, isoliert |
-| **3** | **Läuft:** Hinsehen, nicht bauen. Prüf-Notiz für die Prüfgruppen-Sitzung liegt in `docs/pruefgruppe-merksatz-pilot.md`. **Wartet auf Freigabe aus der Sitzung**, bevor Stufe 4 beginnt. | — | — |
-| **4** | Ausrollen in dieser Reihenfolge: `renderCompletionPage` → `renderPracticeFeedbackPage` → Quiz (`renderQuizQuestion/FeedbackPage/Result`) → `renderTrainingMessage/Result` → `renderTopicChoice`. Ein Screen pro Commit. | ja | mittel |
+| **3** | **Erledigt 08.09.2026** (Vorbereitung): Prüf-Notiz liegt in `docs/pruefgruppe-merksatz-pilot.md`, Commit `9df7023`. Der Prüfgruppen-**Termin** ist ein menschlicher Schritt und läuft getrennt — er blockiert Stufe 4 **nicht**, weil bis dahin nur zeichengleich refaktoriert wird. Die Prüfgruppe wird angesetzt, sobald es eine echte gestalterische Änderung gibt (Wegweiser/Ort-Satz/Fortschritt). | — | — |
+| **3a** | **Erledigt 08.09.2026:** verschärfte Vorlese-Prüfung als Vorbedingung für Stufe 4 — 2 Themen × 3 Sprachstufen (`leicht`/`einfach`/`standard`), Erwartungswerte aus den echten Daten berechnet. Alle 6 Fälle: gelesen **und** mitmarkiert, 0 Fehler. | — | — |
+| **3b** | **Erledigt 08.09.2026:** `buildRememberBox()` um `opts.vorlesen` erweitert (Commit `df20404`), damit die Umstellung nicht nebenbei 5 neue Vorlese-Knöpfe einführt. Verhaltensneutral, kein Aufrufer geändert. | nein | keins |
+| **4** | **Neu geschnitten (siehe Abschnitt 3a unten).** Nur die 5 echten Merksatz-Kästen (Titel „Wichtig", einfacher `p`-Text), alle mit `{vorlesen: false}`. Alles andere bleibt bewusst stehen. | ja, 5 Kästen | klein |
+| **4b** | **Zurückgestellt:** Vorlese-Knopf an *jedem* Merksatz-Kasten anbieten. Pädagogisch begründbar (§3 Vorlesen als Angebot), aber eine **Funktionserweiterung** — eigener Schritt, eigene Freigabe, nicht als Nebeneffekt von Stufe 4. | ja | mittel |
 | **5** | Aufräumen: `buildStepPath()` und `buildCompletionProgress()` entfernen — **erst wenn `rg` null Aufrufer zeigt**. Ggf. die tote `.progress-area` klären. | nein | klein |
 
-Stufe 3 ist kein Papier-Schritt. Ohne sie ist Stufe 4 eine Wette.
+Stufe 3 ist kein Papier-Schritt. Solange aber nur zeichengleich umgebaut wird,
+hängt Stufe 4 nicht am Sitzungstermin — es gibt für die Prüfgruppe schlicht
+nichts Neues zu sehen.
+
+### 3a. Stufe-4-Scope — was umgestellt wird und was nicht
+
+Die ursprüngliche Reihenfolge oben war falsch: sie nannte `renderTrainingMessage`
+und `renderTopicChoice` (dort gibt es **keinen** Merksatz-Kasten) und übersah
+`startTrainingInbox`, `startScenario` und `renderScenarioResult`. Tatsächlicher
+Bestand, ausgezählt mit `rg 'class="access-box remember remember-box"'`:
+**14 Vorkommen in 6 Funktionen**, nicht 6 in 4.
+
+**Wird umgestellt** — echte Merksätze, Titel „Wichtig", einfacher `p`-Text,
+alle mit `{vorlesen: false}` (heute hat keine dieser Stellen einen Block-Knopf):
+
+| Funktion | Text |
+|---|---|
+| `renderPracticeFeedbackPage` | `practice.remember` |
+| `startScenario` | „Alles hier ist erfunden. …" |
+| `startTrainingInbox` | „Alle Nachrichten hier sind erfunden. …" |
+| `renderTrainingResult` | „Bekommst du wirklich so eine Nachricht? …" |
+| `renderScenarioResult` | „Passiert dir so etwas wirklich? …" |
+
+**Bleibt bewusst stehen** — gleiche CSS-Klassen, aber etwas anderes:
+
+| Stelle | Warum |
+|---|---|
+| `renderCompletionPage` ×2 „Eine Sache für heute" (`topic.transfer`) | **Transfer/Handeln**, kein Merksatz. Eigenes didaktisches Element (§12: „eine Sache, die du heute tun kannst"). Zusammenlegen würde die Unterscheidung verlieren. |
+| `renderScenarioResult` „Das nimmst du mit" | **Liste** (`<ul class="sz-merkliste">`) statt Fließtext — passt nicht in `buildRememberBox(titel, text)`. |
+| `startTrainingInbox` „So wächst dein Postfach" / „Dein Postfach" | **Rückmeldung zum Spielstand**, Text aus dem Zustand berechnet. |
+| `renderTrainingResult` „Dein Postfach kann noch wachsen" / „…ist voll" | dito, Titel wechselt je nach Zustand. |
+| `renderScenarioResult` „… ist jetzt offen" / „Noch eine Runde?" / „Du hast alle Runden gemacht" | dito, Titel dreifach verzweigt. |
+
+Nach Stufe 4 nutzen also 6 von 15 Kästen den Baustein; die übrigen 9 bleiben
+absichtlich eigenständig. Das ist kein unfertiger Zustand, sondern die
+Feststellung, dass „sieht gleich aus" nicht „ist dasselbe" bedeutet.
 
 ---
 
