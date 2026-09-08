@@ -4362,12 +4362,7 @@ function renderPracticeFeedbackPage(index, correctIndex) {
         <p>${escapeHtml(explanation)}</p>
       </div>
 
-      ${isCorrect && practice.remember ? `
-        <div class="access-box remember remember-box">
-          <h3>Wichtig</h3>
-          <p class="remember-text">${escapeHtml(practice.remember)}</p>
-        </div>
-      ` : ""}
+      ${isCorrect ? buildRememberBox("Wichtig", practice.remember, { vorlesen: false }) : ""}
       ${regelHinweis}
 
       <div class="feedback-actions">
@@ -5402,10 +5397,7 @@ function startTrainingInbox() {
           <h3>Dein Postfach</h3>
           <p class="remember-text">Du hast ${geschafft.length} ${geschafft.length === 1 ? "Thema" : "Themen"} geschafft. Deshalb liegen ${pool.length} Nachrichten in deinem Postfach.${pool.length > POSTFACH_MAX ? ` Du bekommst ${POSTFACH_MAX} davon – jedes Mal andere.` : ""}</p>
         </div>
-        <div class="access-box remember remember-box">
-          <h3>Wichtig</h3>
-          <p class="remember-text">Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.</p>
-        </div>
+        ${buildRememberBox("Wichtig", "Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
         <div class="certificate-actions">
           <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">${anzahl} Nachrichten prüfen</button>
           <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
@@ -5588,10 +5580,7 @@ function renderTrainingResult() {
       <p>${escapeHtml(lob)}</p>
       ${themen.length ? `<p>Die Nachrichten kamen aus: ${escapeHtml(themen.join(", "))}.</p>` : ""}
       ${waechst}
-      <div class="access-box remember remember-box">
-        <h3>Wichtig</h3>
-        <p class="remember-text">Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.</p>
-      </div>
+      ${buildRememberBox("Wichtig", "Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">Noch einmal üben</button>
         <button type="button" class="nav-button secondary" onclick="renderRegelKarte()">Deine Karte ansehen</button>
@@ -5882,10 +5871,7 @@ function startScenario(topicId) {
         <h2>Übungs-Handy: ${escapeHtml(scn.titel || topic.title)}</h2>
       </div>
       ${(scn.einstieg || []).map(s => `<p>${escapeHtml(s)}</p>`).join("")}
-      <div class="access-box remember remember-box">
-        <h3>Wichtig</h3>
-        <p class="remember-text">Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.</p>
-      </div>
+      ${buildRememberBox("Wichtig", "Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
       ${rundenWahl}
       <div class="certificate-actions">
         ${rundenWahl ? "" : `<button type="button" class="quiz-link quiz-button" onclick="beginScenario()">Üben starten</button>`}
@@ -6107,10 +6093,7 @@ function renderScenarioResult() {
         <h3>Das nimmst du mit</h3>
         <ul class="sz-merkliste">${merksaetze}</ul>
       </div>` : ""}
-      <div class="access-box remember remember-box">
-        <h3>Wichtig</h3>
-        <p class="remember-text">Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.</p>
-      </div>
+      ${buildRememberBox("Wichtig", "Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
       <div class="certificate-actions">
         ${(naechste && bestanden)
           ? `<button type="button" class="quiz-link quiz-button" onclick="beginScenario(${naechste})">${escapeHtml(stufenName(naechste))} starten</button>`
