@@ -219,6 +219,18 @@ Nach Stufe 4 kommen **6 von 16** Kästen aus dem Baustein (der Pilot in
 eigenständig. Das ist kein unfertiger Zustand, sondern die Feststellung, dass
 „sieht gleich aus" nicht „ist dasselbe" bedeutet.
 
+**Eine Stelle ist mehr als eine Umstellung:** In `renderPracticeFeedbackPage` stand
+früher `isCorrect && practice.remember ? … : ""`. Da `buildRememberBox()` bei leerem
+Text von sich aus `""` liefert, steht dort jetzt nur noch `isCorrect ? … : ""`. Am
+DOM ist das Ergebnis identisch, die logische Abhängigkeit aber nicht: sie hängt jetzt
+allein an `isCorrect`. Das ist eine **Refaktorierung, die die `remember`-Prüfung in
+`buildRememberBox` kapselt** — eine kleine Verbesserung, keine reine Umstellung. Die
+Frage „gibt es überhaupt einen Merksatz?" gehört in den Baustein, nicht an jede
+Aufrufstelle. (Der Commit-Text von `6fdc949` nennt sie noch „eine Prüfung weniger";
+nachträglich ändern ließe sich der Text nur durch Umschreiben bereits
+veröffentlichter Historie, deshalb steht die genaue Einordnung hier und als
+Kommentar an der Codestelle.)
+
 **Erledigt 08.09.2026**, Commit `6fdc949`. Nachweis: Vorher/Nachher-Aufnahme des
 gerenderten HTML auf 8 Bildschirmen — die 5 umgestellten Kästen identisch bis auf
 Einrückung zwischen Tags, die 10 übrigen byte-identisch, Vorlese-Erfassung und

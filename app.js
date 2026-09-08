@@ -4362,6 +4362,12 @@ function renderPracticeFeedbackPage(index, correctIndex) {
         <p>${escapeHtml(explanation)}</p>
       </div>
 
+      ${/* Refaktorierung, die die remember-Prüfung in buildRememberBox kapselt:
+            hier stand früher "isCorrect && practice.remember ? … : ''". Der Baustein
+            liefert bei leerem Text von sich aus "", deshalb genügt hier isCorrect.
+            Das ist keine reine Umstellung, sondern eine kleine Verbesserung — die
+            Frage "gibt es überhaupt einen Merksatz?" gehört in den Baustein, nicht
+            an jede Aufrufstelle. */""}
       ${isCorrect ? buildRememberBox("Wichtig", practice.remember, { vorlesen: false }) : ""}
       ${regelHinweis}
 
