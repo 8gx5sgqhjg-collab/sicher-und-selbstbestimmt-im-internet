@@ -260,12 +260,12 @@ Reines HTML/CSS/JS, **kein Framework/Bundler/npm**. JS wird über `<script src>`
 - [ ] Leichte Sprache hält §5 ein; Einfache Sprache sichtbar voller (§6); Anrede „du" (§8).
 - [ ] WCAG 2.2 AA / BITV 2.0 / EN 301 549 + COGA beachtet; Kontrast nicht verschlechtert; alle Bilder mit `alt`.
 - [ ] Vorlesen, Schriftgröße, Tastatur, Skip-Link, Fokus, `Escape` funktionieren.
-- [ ] Neue Piktogramm-Begriffe in `ARASAAC_PICTO` gemappt; Fallback intakt.
+- [ ] Neues Piktogramm als SVG in `assets/pictograms/` angelegt und in die Precache-Liste in `sw.js` eingetragen (§11); `refinePicto`-Regel geprüft, Fallback intakt.
 - [ ] Logo-relevante Leichte-Sprache-Texte für die Prüfgruppe geflaggt (§13).
 
 **Technik & Datenschutz**
 - [ ] `node --check` für alle berührten JS-Dateien ohne Fehler; lokal getestet.
-- [ ] Statisch, kein Backend/Build; nur Google Fonts + ARASAAC extern.
+- [ ] Statisch, kein Backend/Build; **keine externen Quellen** — Schrift lokal in `assets/fonts/`, Piktogramme als eigene SVG in `assets/pictograms/` (§11). Ausnahme: `praxis/` mit eingebetteten ARASAAC-Bildern (base64, kein Aufruf) samt Pflicht-Quellenangabe.
 - [ ] Keine neue Speicherung/Tracker (KDG/DSGVO); relative Pfade.
 - [ ] Dark Mode, Vorlesen, Offline, Navigation funktionieren weiter; bei SW-Änderung `CACHE_VERSION` erhöht.
 - [ ] Titel-Abgleich `content-de.js` ↔ `topics.js` stimmt (keine verwaisten Fassungen).
@@ -280,7 +280,7 @@ Reines HTML/CSS/JS, **kein Framework/Bundler/npm**. JS wird über `<script src>`
 3. ~~**Quiz/Einstiegsfrage je Stufe:** Einstiegsfrage ist je Stufe möglich (Pilot Datenschutz). Voll ausrollen?~~ **Erledigt (August 2026):** alle 12 Themen haben `saVersions`. Quiz bleibt bewusst gemeinsam für alle Stufen.
 4. ~~**DigComp/ICF in der Begleit-Ebene:** explizite DigComp-Codes je Thema ergänzen?~~ **Erledigt (August 2026):** alle 12 Themen haben `kompetenzen` mit DigComp-2.2- und ICF-Codes (§7). Offen bleibt nur: sollen die Codes auch im Beobachtungsbogen und im Erfolgs-Heft auftauchen?
 5. ~~**Echter Offline-Zwang:** Falls ja, ARASAAC-Piktogramme lokal hosten (§11).~~ **Erledigt (August 2026):** eigene SVG-Icons liegen lokal im Precache, kein externer Bild-Aufruf mehr.
-6. ~~**QR-Betrugs-Lektion auch im Kurz-Modus?**~~ **Erledigt:** „Vorsicht bei QR-Codes" liegt im Kurz-Modus. **Neu offen dafür:** Der Kurz-Modus hält sein Versprechen nicht — er liefert 94 von 129 Lektionen (73 %), die Beschriftung sagt aber „Kurz — Nur das Wichtigste". Ziel laut ursprünglicher Absicht: wenige Kern-Lektionen je Thema. Kürzung auf Start + 3 Kern-Lektionen + Merksätze ist beschlossen (August 2026), `shortLessonIndexes` in `topics.js` entsprechend setzen.
+6. ~~**QR-Betrugs-Lektion auch im Kurz-Modus?**~~ **Erledigt:** „Vorsicht bei QR-Codes" liegt im Kurz-Modus. ~~**Neu offen dafür:** Der Kurz-Modus hält sein Versprechen nicht — er liefert 94 von 129 Lektionen (73 %).~~ **Ebenfalls erledigt (September 2026):** Der Kurz-Modus liefert heute **60 von 129 Lektionen (46 %)**, gleichmäßig **5 Schritte je Thema** — Start + 3 Kern-Lektionen + „Das merke ich mir". Die Themen-Seite beziffert die Menge sichtbar („Kurz — 5 Schritte", Prüfbericht B8), das Versprechen stimmt also wieder. Gesteuert wird das über **`topic.einfachLessons`** in `topics.js` (alle 12 Themen), nicht über `shortLessonIndexes`: Dieses Feld ist aus `topics.js` entfernt und in `getLessonsForMode()` (`app.js`) nur noch **Rückfallzweig** für ein künftiges Thema ohne eigene Kurzfassung. Der Zweig bleibt stehen; wer den Kurz-Modus ändert, ändert `einfachLessons`.
 7. **Wegzeichen (Alex und Tilda an festen Orten):** Konzept liegt vor (`_vorschau-wegzeichen-konzept.html`). Erst Prüfgruppe, dann 7 Illustrations-Varianten, dann Einbau.
 8. **Prüfgruppen-Katalog (offen):** Menü-Wörter („Mein Lernweg"), Lautsprecher-Symbol ohne Wort, Formel „eine Person, der du vertraust", Themen-Gruppen-Namen, Frage des Tages, KI-Einsamkeits-Satz, Frage-Muster-Sätze, QR-Karten, „Lernen starten"-Knopf.
 

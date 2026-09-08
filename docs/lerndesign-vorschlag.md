@@ -168,7 +168,7 @@ Nach jeder Stufe läuft die Prüfung aus Abschnitt 6.
 
 | Stufe | Inhalt | Sichtbar? | Risiko |
 |---|---|---|---|
-| **0** | **Doku-Fix** (Abschnitt 7). Nur `CLAUDE.md`. **Eigener Commit, nicht mit UI mischen.** | nein | keins |
+| **0** | ~~**Doku-Fix** (Abschnitt 7). Nur `CLAUDE.md`.~~ **Erledigt 08.09.2026**, eigener Commit. | nein | keins |
 | **1** | Bausteine anlegen: `buildMerksatz()`, `buildProgress()`, `buildWegweiser()`. Rein additiv — **kein Aufrufer**, kein Screen ändert sich. `node --check app.js`. | nein | sehr klein |
 | **2** | **Pilot.** Nur `renderLesson()` nutzt die Bausteine. Alle anderen 48 Screens laufen unverändert weiter. CSS für `.wegweiser` in `styles.css`, nur mit vorhandenen Tokens. | ja, 1 Screen | klein, isoliert |
 | **3** | **Hinsehen, nicht bauen.** Pilot mit 3–5 Personen der Zielgruppe durchgehen (`beobachtungsbogen.html`). §13, Gamification §6. Ergebnis entscheidet über Stufe 4. | — | — |
@@ -379,8 +379,11 @@ Befund:
 → In §17 die Zeile „nur Google Fonts + ARASAAC extern" ersetzen durch
 „keine externen Quellen; Schrift und Piktogramme lokal" und die
 `ARASAAC_PICTO`-Zeile auf `assets/pictograms/` + `sw.js`-Precache umschreiben.
-**Offene Frage an dich:** soll `download_pictos.js` gelöscht werden? Es ist
-funktionslos. Ich fasse es nicht ohne Auftrag an (§1).
+**Erledigt (08.09.2026):** `download_pictos.js` ist auf Anweisung gelöscht. Es war
+funktionslos — es suchte `ARASAAC_PICTO` in `app.js` und brach mit einer
+Fehlermeldung ab. Über die Git-Historie jederzeit wiederherstellbar.
+`download-fonts.sh` und `assets/fonts/DOWNLOAD.md` **bleiben**: sie funktionieren
+und dokumentieren, woher die lokale Schrift stammt.
 
 ---
 
@@ -447,10 +450,11 @@ Von Hand am Pilot-Screen:
 
 ## 10. Was ich von dir brauche
 
-1. **Freigabe für Stufe 0** (Doku-Fix, eigener Commit) — oder Vertagung.
-2. **Freigabe für Stufe 1+2** (Bausteine + Pilot auf dem Lernschritt).
-3. Entscheidung zu `download_pictos.js` (Abschnitt 7, Fix 2).
+1. ~~**Freigabe für Stufe 0**~~ — erteilt, erledigt 08.09.2026.
+2. ~~Entscheidung zu `download_pictos.js`~~ — gelöscht, 08.09.2026.
+3. **Freigabe für Stufe 1+2** (Bausteine + Pilot auf dem Lernschritt) — **offen.**
+   Das ist die erste Stufe, die `app.js` und `styles.css` anfasst und sichtbar wird.
 4. Danach: Stufe 3 ist **deine** Entscheidung, nicht meine — die Prüfgruppe sagt,
    ob Stufe 4 kommt.
 
-Ohne diese Freigaben ändere ich nichts.
+Ohne Freigabe für Stufe 1+2 ändere ich keinen Code.
