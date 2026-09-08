@@ -4078,13 +4078,33 @@ function blockRead(t) {
     : "";
 }
 
-/* Der siebenmal handkopierte Merksatz-Kasten (renderLesson, renderPracticeFeedbackPage,
-   renderCompletionPage x2, renderTrainingMessage x2, renderTrainingResult) als ein
-   Baustein. Rein additiv: kein bestehender Aufrufer nutzt ihn in dieser Stufe.
-   Markup, Klassen und Vorlese-Text sind Zeichen für Zeichen wie in renderLesson. */
-function buildRememberBox(titel, text) {
+/* Der handkopierte Merksatz-Kasten als ein Baustein.
+   Markup, Klassen und Vorlese-Text sind Zeichen für Zeichen wie in renderLesson.
+
+   WOFÜR DIESER BAUSTEIN DA IST — und wofür nicht:
+   Er ist der Kasten für den MERKSATZ (Merken: ein Satz, den die Person
+   mitnehmen soll). Er ist ausdrücklich NICHT gedacht für:
+   - TRANSFER / Handeln ("Eine Sache für heute", topic.transfer in
+     renderCompletionPage). Das ist ein anderes didaktisches Element (§12:
+     Transfer-Schritt), auch wenn es heute dieselben CSS-Klassen benutzt.
+     Wer das zusammenlegt, verliert die Unterscheidung.
+   - LISTEN ("Das nimmst du mit" in renderScenarioResult, <ul> statt <p>).
+     Dieser Baustein kennt nur einen Fließtext.
+   - Ergebnis-Kästen mit wechselndem, aus dem Zustand berechnetem Titel
+     ("Dein Postfach kann noch wachsen", "Noch eine Runde?" …). Das sind
+     Rückmeldungen zum Spielstand, keine Merksätze.
+
+   opts.vorlesen (Standard true): steuert den Block-Vorlese-Knopf.
+   Auf false setzen an Stellen, die heute KEINEN eigenen Knopf haben — dort
+   wird der Kasten nur über das seitenweite Vorlesen mitgelesen. So bleibt
+   die Umstellung verhaltensneutral, statt nebenbei 5 neue Knöpfe
+   einzuführen. Vorlesen überall anzubieten ist eine eigene Entscheidung
+   (§3 Vorlesen als Angebot) und gehört in einen eigenen Schritt. */
+function buildRememberBox(titel, text, opts) {
+  opts = opts || {};
+  const vorlesen = opts.vorlesen !== false;
   return text
-    ? `<div class="access-box remember remember-box"><h3>${escapeHtml(titel)}</h3><p class="remember-text">${escapeHtml(text)}</p>${blockRead(titel + ". " + text)}</div>`
+    ? `<div class="access-box remember remember-box"><h3>${escapeHtml(titel)}</h3><p class="remember-text">${escapeHtml(text)}</p>${vorlesen ? blockRead(titel + ". " + text) : ""}</div>`
     : "";
 }
 
