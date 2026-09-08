@@ -373,6 +373,17 @@ keine neue Datei entsteht. Nach dem Deployen einmal mit installierter PWA
 gegenprüfen, dass das Update-Banner (`index.html`, `showUpdateBanner()`) erscheint
 und der Neuladen-Knopf funktioniert.
 
+> **Genau das ist dann passiert — nachgetragen 08.09.2026.** Dieser Abschnitt stand
+> so schon im Vorschlag, befolgt wurde er nicht: Die Stufen 1, 2 und 4 gingen ohne
+> Erhöhung raus, weil `CLAUDE.md` §16.6 damals nur von „geändertem `sw.js` oder
+> Precache-Liste" sprach und `app.js` **in** dieser Liste steht. Ergebnis: die
+> Änderungen lagen auf GitHub Pages, kamen aber bei niemandem an, der die Seite
+> schon einmal offen hatte. Behoben mit Commit `a8ca0b4` (`v2026-12m` → `v2026-12n`,
+> im Browser gegengeprüft: alter Cache gelöscht, neuer enthält die echte `app.js`).
+> §16.6, §17 und §15 sind seitdem präzisiert. **Merksatz für künftige Sitzungen:**
+> eine Änderung an `app.js` ist eine Änderung an der Precache-Liste ihrem Inhalt
+> nach — auch wenn die Liste selbst gleich bleibt.
+
 ### 6.3 Weitere
 
 | Risiko | Gegenmittel |

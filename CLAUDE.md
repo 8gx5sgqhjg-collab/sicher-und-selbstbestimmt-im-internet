@@ -221,7 +221,7 @@ Pädagogische Rahmung konsistent über alle Module: Lernziel + Aktivierung (Enga
 | `begleitung-de.js` | `COMPANION` (Begleit-Ebene für Fachkräfte, §7). |
 | `app.js` | Renderer + Engine: Sprach-Ebenen, `resolveLessonContent`, `resolveSelfAssessment`, `pictoSrc`, Tab-Navigation (`navigateTab`, `setActiveTab`), Hash-Routing (`handleHash`, `rememberRoute`), Orientierung (`setOrientation`, `lastLessonContext`), Sitzungs-Fortschritt (`sessionDoneTopics`), Frage des Tages, `printSuccessBook`, `printQrCards`, Glossar (`GLOSSAR`), Vorlesen, Dark-Mode-Reaktion, `buildCompanionPanel`/`printCompanion`. |
 | `styles.css` | Design-System, Dark Mode, APCA-Kontraste, Responsive, Tab-Leiste (`main-tabbar`), textsichere Themen-Farben (`--topic-text`). |
-| `sw.js` | Offline-Cache (App-Dateien + ARASAAC + QR-Karten). `CACHE_VERSION` bei jeder Veröffentlichung erhöhen. |
+| `sw.js` | Offline-Cache (App-Dateien, eigene Piktogramme, QR-Karten). `CACHE_VERSION` erhöhen, sobald eine Datei aus der Precache-Liste geändert wurde — siehe §16.6, dort steht auch, warum. |
 | `fortschritt.html` | Live-Dashboard (Stand der Ebenen + GitHub-Commits). |
 | `assets/` | Schriften, Logos, Icons, Illustrationen, lokale Piktogramme. |
 | `assets/qr/` | Lokal vorerzeugte QR-Codes je Thema + Startseite (13 SVGs, kein externer Dienst). Bei neuen Themen neu erzeugen. |
@@ -242,7 +242,9 @@ Reines HTML/CSS/JS, **kein Framework/Bundler/npm**. JS wird über `<script src>`
    node --check app.js && node --check topics.js && node --check content-de.js && node --check begleitung-de.js && node --check sw.js
    python3 -m http.server 8000   # http://localhost:8000 testen
    ```
-6. Bei geändertem `sw.js` oder Precache-Liste: `CACHE_VERSION` hochzählen.
+6. **`CACHE_VERSION` in `sw.js` hochzählen, sobald *irgendeine* Datei aus der Precache-Liste geändert wurde** — also insbesondere bei jeder Änderung an `app.js`, `styles.css`, `index.html` oder den Inhalts-Dateien (`topics.js`, `content-de.js`, `begleitung-de.js`, `szenarien-de.js`, `regeln-de.js`, `uebungen-de.js`), und natürlich bei geändertem `sw.js` oder geänderter Precache-Liste selbst.
+   **Warum das keine Formsache ist:** Alles außer HTML wird **Cache-first** ausgeliefert (`sw.js`, Fetch-Handler: `if (cached) return cached;`). Ohne neue Version liefert der Browser bei jedem, der die Seite schon einmal offen hatte, weiter die **alte** Datei aus — er fragt das Netz gar nicht erst. Die Änderung ist dann zwar auf GitHub Pages, kommt aber bei niemandem an. Genau so blieben im September 2026 mehrere Änderungen an `app.js` unsichtbar, weil die Regel vorher nur von „`sw.js` oder Precache-Liste" sprach und `app.js` **in** dieser Liste steht.
+   Vor dem Hochzählen prüfen, dass alle Einträge der Precache-Liste auf existierende Dateien zeigen — ein toter Eintrag lässt `cache.addAll` und damit die ganze Installation scheitern.
 7. **Veröffentlichen über GitHub Desktop** (Commit to main → Push origin) — erst nach **ausdrücklicher Freigabe**. Die nutzende Person ist nicht technisch; Schritte einfach erklären. (Bei „lock file"-Meldung: GitHub Desktop beenden, `rm ~/Downloads/lernplattform-live/.git/index.lock`, neu öffnen.)
 8. Vorschau-/Hilfsdateien (`_vorschau-*.html`, `*.bak`) sind in `.gitignore` und gehören nicht ins Repo.
 
@@ -268,7 +270,8 @@ Reines HTML/CSS/JS, **kein Framework/Bundler/npm**. JS wird über `<script src>`
 - [ ] `node --check` für alle berührten JS-Dateien ohne Fehler; lokal getestet.
 - [ ] Statisch, kein Backend/Build; **keine externen Quellen** — Schrift lokal in `assets/fonts/`, Piktogramme als eigene SVG in `assets/pictograms/` (§11). Ausnahme: `praxis/` mit eingebetteten ARASAAC-Bildern (base64, kein Aufruf) samt Pflicht-Quellenangabe.
 - [ ] Keine neue Speicherung/Tracker (KDG/DSGVO); relative Pfade.
-- [ ] Dark Mode, Vorlesen, Offline, Navigation funktionieren weiter; bei SW-Änderung `CACHE_VERSION` erhöht.
+- [ ] Dark Mode, Vorlesen, Offline, Navigation funktionieren weiter.
+- [ ] **`CACHE_VERSION` erhöht, sobald eine Datei aus der Precache-Liste geändert wurde** — also bei jeder Änderung an `app.js`, `styles.css`, `index.html`, den Inhalts-Dateien oder `sw.js` selbst (§16.6). Sonst bleibt die alte Fassung im Cache und die Änderung erreicht niemanden.
 - [ ] Titel-Abgleich `content-de.js` ↔ `topics.js` stimmt (keine verwaisten Fassungen).
 - [ ] Klare Commit-Nachricht; Freigabe der nutzenden Person liegt vor.
 
