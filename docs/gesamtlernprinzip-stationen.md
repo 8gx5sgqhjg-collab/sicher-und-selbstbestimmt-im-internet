@@ -1,8 +1,13 @@
 # Gesamtlernprinzip — Zielbild: Startseite + 6 Stationen
 
-**Stand:** 08.09.2026 · **Status:** Struktur-Entwurf zur Freigabe — **es wurde nichts gebaut**
+**Stand:** 08.09.2026 · **Status:** Entwurf mit allen Entscheidungen (P1–P6, S1–S4) — zur Freigabe — **es wurde nichts gebaut**
 **Art:** Schiene B (reine Planung). Nur `docs/`. `app.js`, `styles.css`, `sw.js`, `index.html`
 und alle Inhalts-Dateien sind byte-identisch zum Vor-Commit.
+
+> **Korrektur 08.09.2026:** Nachzählung mit `node` ergab **122** Quizfragen (nicht 121 —
+> an zwei Stellen korrigiert). Zudem: `cardFor()` beginnt bei `app.js:2805` (nicht 2807); die
+> Angebots-Liste steht bei `app.js:2686–2693` (nicht 2687), die Meta-Zeile bei `:2694` — beide
+> im selben `${isReturning ? "" : …}`-Block, der ab `:2685` öffnet.
 
 > **Verbindliche Grenze dieses Dokuments.** Hier wird **einsortiert, nicht umgeschrieben.**
 > Jeder Satz, der unten genannt wird, bleibt **wortgleich** an seiner Quelle stehen. Neu sind
@@ -46,6 +51,14 @@ eine Person ankommt und **ein Thema wählt**. Von dort führt jeder Klick in den
    Wegweiser/Fortschritt: hier NICHT. Erst im Thema.
 ```
 
+> **Entschieden (S1, Weg a):** Das Bild zeigt die **inhaltliche** Ordnung — nicht eine neue
+> Seite. `#start` und `#themen` bleiben **zwei Seiten**: Der Leitsatz „So lernst du." steht
+> auf `#start` direkt unter der Begrüßung (Advance Organiser *vor* dem Inhalt). Die 12
+> Kacheln bleiben ausschließlich auf `#themen`. Tab-Leiste und Hash-Routing unberührt (§1).
+> Zusätzlicher Grund neben Kohärenz: Der August-2026-Umbau von `renderIntro()` und
+> Prüfbericht B19 haben beide belegt, dass Inhalt über den Kacheln die erste Kachel unter
+> die Falz schiebt — ein zusammengelegter Einstieg (Weg c) dreht diesen Fold-Gewinn zurück.
+
 ### 0.2 Was hier steht — und woher es kommt
 
 | Element | Herkunft | Status |
@@ -53,7 +66,7 @@ eine Person ankommt und **ein Thema wählt**. Von dort führt jeder Klick in den
 | Begrüßung „Willkommen!" + „Alex und Tilda begleiten dich…" | `renderIntro()` `app.js:2667–2668` | **wortgleich übernehmen** |
 | Leitsatz „So lernst du." + 🧠→✅→➜ | — | **NEU**, reines Gestaltungs-Label (3 Wörter + 3 Icons) |
 | „Wähle ein Thema" / „Tippe auf ein Thema. Dann geht es los." | `renderMenu()` `app.js:2895–2896` | **wortgleich übernehmen** |
-| Die 12 Themen-Kacheln (Titel + `desc` + Symbol + Vorlese-Knopf) | `renderMenu()` `cardFor()` `app.js:2807`, `TOPIC_GROUPS` `:2781` | **wortgleich übernehmen**, inkl. der 3 Gruppen |
+| Die 12 Themen-Kacheln (Titel + `desc` + Symbol + Vorlese-Knopf) | `renderMenu()` `cardFor()` `app.js:2805`, `TOPIC_GROUPS` `:2781` | **wortgleich übernehmen**, inkl. der 3 Gruppen |
 | Hilfe-Anker „Du brauchst Unterstützung?" | `buildSupportBox()` `app.js:3796` | vorhanden, **eingeklappt** |
 | Glossar „Was bedeutet:" | `app.js:708`, `.glossar-term` `:795` | vorhanden, **nur auf Antippen** |
 | Wegweiser / Fortschritt | `buildStepPath()` `app.js:4048` | **hier bewusst NICHT** — erst im Thema |
@@ -73,24 +86,24 @@ eine Person ankommt und **ein Thema wählt**. Von dort führt jeder Klick in den
 - **Emotionale Sicherheit (Došen):** Vorhersehbarkeit entsteht durch **immer denselben**
   Einstieg. Ein Bildschirm, eine Frage: „Wähle ein Thema."
 
-### 0.4 Zwei Dinge, die beim Bauen zu entscheiden sind
+### 0.4 Zwei Entscheidungen — **entschieden am 08.09.2026**
 
-> **S1 — Der Einstieg liegt heute auf ZWEI Seiten.** `#start` (`renderIntro()`, Begrüßung +
-> „Los geht's") und `#themen` (`renderMenu()`, die 12 Kacheln) sind **zwei getrennte Punkte
-> der festen 5-Punkte-Tab-Leiste** (§1, geschützter Bestand). Das Zielbild oben legt beide
-> **auf eine Seite** zusammen. Das ist **kein Layout-Detail**, sondern ein Eingriff in die
-> geschützte Navigation. Drei Wege: (a) Leitsatz auf `#start` ergänzen, Kacheln bleiben auf
-> `#themen` — Tab-Leiste unberührt; (b) Kacheln zusätzlich auf `#start` zeigen — Doppelung,
-> widerspricht Kohärenz; (c) beide Tabs zusammenlegen — Bestandseingriff, braucht eigene
-> Freigabe. **Ohne Entscheidung wird hier nichts gebaut.**
+> **S1 — Der Einstieg bleibt auf ZWEI Seiten (Weg a).** `#start` (Begrüßung + Leitsatz) und
+> `#themen` (die 12 Kacheln) bleiben zwei getrennte Punkte der festen 5-Punkte-Tab-Leiste
+> (§1, geschützter Bestand). Der Leitsatz wird nur auf `#start` ergänzt, direkt unter der
+> Begrüßung; von den Wegen (b) Doppelung und (c) Tabs zusammenlegen wurde abgesehen — (b)
+> widerspricht der eigenen Kohärenz-Begründung, (c) wäre ein Eingriff in die geschützte
+> 5-Punkte-Navigation inkl. Hash-Routing und schiebe die erste Kachel wieder unter die Falz
+> (Befund August-2026-Umbau `renderIntro()`, Prüfbericht B19).
 >
-> **S2 — Was weicht dem Leitsatz?** Auf `#start` stehen heute zusätzlich die Angebots-Liste
-> („Das kannst du hier machen:" mit 3 Punkten, `app.js:2687–2693`) und die Meta-Zeile
-> („12 Themen · 3 Sprachstufen · kostenlos · kein Name nötig", `:2694`). Beide sagen
-> Verwandtes zum neuen Leitsatz. Nach dem Kohärenz-Prinzip müsste **eines von beiden weichen**
-> — aber das wäre Entfernen von Bestand (§1) und damit nicht von diesem Auftrag gedeckt.
-> Vorschlag zur Entscheidung: Angebots-Liste behalten (sie erscheint ohnehin nur beim
-> **ersten** Besuch), Leitsatz darunter. Dann konkurriert nichts.
+> **S2 — Nichts weicht.** Angebots-Liste („Das kannst du hier machen:", `app.js:2686–2693`)
+> und Meta-Zeile (`:2694`) bleiben **vollständig stehen**. Kein Entfernen von Bestand (§1).
+> Begründung: Beide Blöcke sehen nur **Erstbesuchende** (sie stehen gemeinsam im selben
+> `${isReturning ? "" : …}`-Block, geöffnet ab `:2685`), und sie beantworten andere Fragen
+> als der Leitsatz — Liste = das Angebot, Meta = Vertrauens-Fakten, Leitsatz = der Lernweg.
+> Da beide unterhalb des Start-Knopfs liegen (Fold), konkurrieren sie nicht mit dem
+> Leitsatz an der Handlungsstelle. Es gibt also **kein echtes Redundanz-Problem**, das
+> ein Entfernen rechtfertigen würde.
 
 > **Neue Wörter auf dieser Seite: genau drei.** „So lernst du." Dazu die drei Etiketten
 > Merken / Prüfen / Handeln. Alles andere ist vorhandener Text. Diese vier Beschriftungen
@@ -116,7 +129,7 @@ eine Person ankommt und **ein Thema wählt**. Von dort führt jeder Klick in den
 zweites Feld, ist aber ein **Laufzeit-Alias**: `normalizeQuizzes()` (`content-de.js:1752`)
 setzt `t.quiz = t.quizQuestions`, wenn `quiz` fehlt. In `topics.js` existiert nur
 `quizQuestions`. **Für Station 4 gilt deshalb ausschließlich `topic.quizQuestions`** —
-121 Fragen über alle 12 Themen. Es gibt keinen zweiten, konkurrierenden Fragen-Bestand.
+122 Fragen über alle 12 Themen. Es gibt keinen zweiten, konkurrierenden Fragen-Bestand.
 
 **b) Station 3 speist sich aus zwei Töpfen, nicht aus einem.** `lesson.remember` ist dünn
 gesät (31 Sätze über alle Themen, Instagram hat **null**). Der größere Topf sind die
@@ -318,7 +331,7 @@ Lesehilfe: **🧠** = Station 3 · **✅** = Station 4 · **➜** = Station 5.
 | 1 Start | 12 Einstiegsfragen (+ je 3 Sprachstufen über `saVersions`) |
 | 2 Thema | 12 Titel/Beschreibungen · **36** Lernziele · 12 Start-Lektionen |
 | 3 Lernen 🧠 | **31** `lesson.remember` + **70** `practice.remember` · 24 `warning` · 2 `success` · 13 `examples` |
-| 4 Quiz ✅ | **121** Original-Fragen in `topic.quizQuestions` |
+| 4 Quiz ✅ | **122** Original-Fragen in `topic.quizQuestions` |
 | 5 Transfer ➜ | **12** Transfer-Sätze · 1 gemeinsamer Hilfe-Anker (`buildSupportBox`) · 54 `helpQuestions` |
 | 6 Abschluss | **69** `memoryRules` · 12 Schluss-Lektionen „Das merke ich mir" |
 
@@ -347,14 +360,14 @@ Lesehilfe: **🧠** = Station 3 · **✅** = Station 4 · **➜** = Station 5.
 | **P5** | Etikett **„DEINE eine Sache für heute"** statt „Eine Sache für heute". | Ein Wort mehr an einem Etikett. Der Transfer-**Satz** darunter bleibt wortgleich. |
 | **P6** | Die vorhandenen **„Hilfe"-Module** der 3 sensiblen Themen werden in **Station 5 aufgegriffen**, nicht danebengestellt. | Keine Doppelung. Entlastende Sätze bleiben wortgleich. |
 
-### Was noch offen ist
+### S1–S4 — entschieden am 08.09.2026
 
-| # | Frage | Warum sie eine Entscheidung braucht |
+| # | Entscheidung | Folge für den Bau |
 |---|---|---|
-| **S1** | **Einstieg auf einer oder zwei Seiten?** Heute sind `#start` und `#themen` zwei Punkte der festen 5-Punkte-Tab-Leiste. Das Zielbild in §0.1 legt beide zusammen. | Eingriff in **geschützten Bestand** (§1: feste 5-Punkte-Navigation). Drei Wege in §0.4 beschrieben. |
-| **S2** | **Was weicht dem neuen Leitsatz?** Angebots-Liste und Meta-Zeile auf `#start` sagen Verwandtes. | Etwas wegzunehmen ist **Entfernen von Bestand** (§1) — nicht von diesem Auftrag gedeckt. Vorschlag in §0.4. |
-| **S3** | **Wo endet Station 3 und beginnt Station 4?** Die Übungen (`practice`) liefern die Merksätze für 🧠 **und** sind Abfrage — sie sitzen heute *innerhalb* der Lektion. | Mit P4 sind Übungs-Handy/Postfach bei ✅. Für die **Lektions-Übung** ist das noch nicht entschieden. |
-| **S4** | **Etiketten für die Prüfgruppe:** „So lernst du.", „Merken", „Prüfen", „Handeln", „DEINE eine Sache für heute". | §11/§13: Kurz-Etiketten und Piktogramme sind für die Zielgruppe **nicht automatisch** verständlich. Gehören auf die Liste in §18.8. |
+| **S1** | **Weg (a): Zwei Seiten bleiben.** Leitsatz nur auf `#start` unter der Begrüßung; die 12 Kacheln bleiben ausschließlich auf `#themen`. | Tab-Leiste und Hash-Routing unberührt (§1). Keine Doppelung (Weg b), kein Zusammenlegen (Weg c); die erste Kachel bleibt über der Falz (August-2026-Umbau, B19). |
+| **S2** | **Nichts weicht.** Angebots-Liste und Meta-Zeile bleiben vollständig stehen. | Kein Entfernen von Bestand (§1). Beide Blöcke sind nur für Erstbesuchende sichtbar (`isReturning`-Block ab `app.js:2685`) und liegen unter der Falz — sie beantworten andere Fragen als der Leitsatz (Angebot/Fakten vs. Lernweg) und konkurrieren nicht mit ihm. |
+| **S3** | **Die Lektions-Übung bleibt Station 3 (🧠 Lernen).** Station 4 beginnt mit `topic.quizQuestions`. | `practice.remember` bleibt in 🧠 (P1 unverändert); Übungs-Handy und Trainings-Postfach bleiben ✅ (P4 unverändert). Begründung: Die Übung hat elaboriertes Feedback, keinen Score und unbegrenzte Versuche — sie ist gestütztes Lernen, kein Retrieval-Test. |
+| **S4** | **Eintrag in den Prüfgruppen-Katalog (§18.8) erfolgt mit dem Bau** der Einstiegsseite — nicht vorab und nicht danach. | Die fünf Etiketten („So lernst du.", „Merken", „Prüfen", „Handeln", „DEINE eine Sache für heute") gehören in denselben Commit-Stapel wie die Einstiegsseite; die Seite geht nicht ohne den Eintrag live (§11/§13). |
 
 ---
 
@@ -375,8 +388,17 @@ Lesehilfe: **🧠** = Station 3 · **✅** = Station 4 · **➜** = Station 5.
    dünn (§3, Selbstregulation).
 6. **`CACHE_VERSION` hochzählen**, sobald `app.js` oder `styles.css` dafür angefasst wird
    (§16.6) — sonst sieht niemand die Änderung.
-7. **Erst S1 und S2 entscheiden**, bevor an der Einstiegsseite gebaut wird — beides berührt
-   geschützten Bestand (§1).
+7. **S1–S4 sind entschieden** (Tabelle in §4): Die Einstiegsseite wird nach **Weg (a)**
+   gebaut (Leitsatz auf `#start`, Kacheln bleiben auf `#themen`), Angebots-Liste und
+   Meta-Zeile bleiben stehen, die Lektions-Übung bleibt Station 3, und der
+   §18.8-Prüfgruppen-Eintrag der fünf Etiketten gehört in denselben Bau-Stapel — er steht
+   vor dem Push. Geschützter Bestand (§1) wird nirgends angefasst.
+8. **Sprach-Finder-Fix fährt im selben Stapel** (eigener kleiner Commit, Audit-Befund
+   08.09.2026): Die Einstiegskarte `renderStart()` verspricht „3 kurze Fragen"
+   (`app.js:2303` und `:2309`), `SAMPLE_ROUNDS` hat aber 2 Runden — die **UI-Zahl wird auf
+   2 korrigiert**, nicht die Runden erhöht. Grund: §18.2 dokumentiert zwei Runden als
+   entschieden; eine dritte Runde wäre neuer Inhalt. Die Finder-Kopfzeile („Beispiel X
+   von 2", dynamisch über `SAMPLE_ROUNDS.length`) ist bereits korrekt. Ein
+   `CACHE_VERSION`-Bump deckt Einstiegsseite und Fix gemeinsam ab.
 
-**P1–P6 sind entschieden. Gebaut wird trotzdem erst nach deiner Freigabe dieses Entwurfs —
-und für die Einstiegsseite zusätzlich erst nach S1/S2.**
+**P1–P6 und S1–S4 sind entschieden. Gebaut wird erst nach deiner Freigabe dieses Entwurfs.**
