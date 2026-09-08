@@ -179,6 +179,7 @@ kompetenzen: {
 - Offline: alle Piktogramme stehen im Precache von `sw.js`. **Echte Offline-Fähigkeit ist damit erreicht** (früher offener Punkt §18.5).
 - Neues Piktogramm: SVG in `assets/pictograms/` anlegen (viewBox `0 0 96 96`, `role="img"`, `aria-label`, Farben aus dem Marken-Blau) und in die Precache-Liste in `sw.js` eintragen.
 - **Piktogramme nicht als selbsterklärend voraussetzen** — mit der Zielgruppe testen (§13).
+- **Altlast entfernt (September 2026):** `download_pictos.js` (lud ARASAAC-Bilder von `static.arasaac.org` anhand einer Liste `ARASAAC_PICTO` in `app.js`) wurde gelöscht. Diese Liste gab es seit der Ablösung oben nicht mehr, das Skript brach beim Aufruf sofort ab — reiner toter Rest aus der alten externen Strategie. `download-fonts.sh` und `assets/fonts/DOWNLOAD.md` bleiben, sie funktionieren weiterhin für die lokale Schrift. **Nicht wieder anlegen ohne Auftrag.**
 
 **Ausnahme Workshop-Seiten:** Die Praxis-Seiten unter `praxis/` stammen aus der Workshop-Pipeline und enthalten weiterhin **eingebettete ARASAAC-Bilder** (base64, kein externer Aufruf). Ihre Quellenangabe im Fuß („Bildzeichen: ARASAAC – Autor Sergio Palao (Gobierno de Aragón), Lizenz CC BY-NC-SA") ist Pflicht und **bleibt stehen**.
 
