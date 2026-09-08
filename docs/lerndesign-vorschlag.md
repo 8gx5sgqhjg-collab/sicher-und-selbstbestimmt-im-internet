@@ -188,7 +188,10 @@ Die ursprüngliche Reihenfolge oben war falsch: sie nannte `renderTrainingMessag
 und `renderTopicChoice` (dort gibt es **keinen** Merksatz-Kasten) und übersah
 `startTrainingInbox`, `startScenario` und `renderScenarioResult`. Tatsächlicher
 Bestand, ausgezählt mit `rg 'class="access-box remember remember-box"'`:
-**14 Vorkommen in 6 Funktionen**, nicht 6 in 4.
+**15 handgeschriebene Kästen in 6 Funktionen**, nicht 6 in 4
+(`renderPracticeFeedbackPage` 1 · `renderCompletionPage` 2 ·
+`startTrainingInbox` 3 · `renderTrainingResult` 3 · `startScenario` 1 ·
+`renderScenarioResult` 5).
 
 **Wird umgestellt** — echte Merksätze, Titel „Wichtig", einfacher `p`-Text,
 alle mit `{vorlesen: false}` (heute hat keine dieser Stellen einen Block-Knopf):
@@ -211,9 +214,15 @@ alle mit `{vorlesen: false}` (heute hat keine dieser Stellen einen Block-Knopf):
 | `renderTrainingResult` „Dein Postfach kann noch wachsen" / „…ist voll" | dito, Titel wechselt je nach Zustand. |
 | `renderScenarioResult` „… ist jetzt offen" / „Noch eine Runde?" / „Du hast alle Runden gemacht" | dito, Titel dreifach verzweigt. |
 
-Nach Stufe 4 nutzen also 6 von 15 Kästen den Baustein; die übrigen 9 bleiben
-absichtlich eigenständig. Das ist kein unfertiger Zustand, sondern die
-Feststellung, dass „sieht gleich aus" nicht „ist dasselbe" bedeutet.
+Nach Stufe 4 kommen **6 von 16** Kästen aus dem Baustein (der Pilot in
+`renderLesson` plus die 5 oben); die übrigen **10** bleiben absichtlich
+eigenständig. Das ist kein unfertiger Zustand, sondern die Feststellung, dass
+„sieht gleich aus" nicht „ist dasselbe" bedeutet.
+
+**Erledigt 08.09.2026**, Commit `6fdc949`. Nachweis: Vorher/Nachher-Aufnahme des
+gerenderten HTML auf 8 Bildschirmen — die 5 umgestellten Kästen identisch bis auf
+Einrückung zwischen Tags, die 10 übrigen byte-identisch, Vorlese-Erfassung und
+Zahl der Block-Knöpfe überall unverändert.
 
 ---
 
