@@ -4188,9 +4188,10 @@ function renderLesson() {
     ? `<div class="access-box success"><h3>Gut</h3><p>${escapeHtml(lesson.success)}</p>${blockRead("Gut. " + lesson.success)}</div>`
     : "";
 
-  const remember = lesson.remember
-    ? `<div class="access-box remember remember-box"><h3>Wichtig</h3><p class="remember-text">${escapeHtml(lesson.remember)}</p>${blockRead("Wichtig. " + lesson.remember)}</div>`
-    : "";
+  /* Stufe 2 (Lerndesign-Vorschlag): nutzt jetzt den gemeinsamen Baustein
+     buildRememberBox() statt eigenem Markup. Titel und Text unverändert
+     "Wichtig" / lesson.remember - reine Umstellung, kein neuer Text. */
+  const remember = buildRememberBox("Wichtig", lesson.remember);
 
   const practice = hasPractice ? buildPractice(lesson.practice) : "";
 
