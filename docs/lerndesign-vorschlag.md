@@ -169,9 +169,9 @@ Nach jeder Stufe läuft die Prüfung aus Abschnitt 6.
 | Stufe | Inhalt | Sichtbar? | Risiko |
 |---|---|---|---|
 | **0** | ~~**Doku-Fix** (Abschnitt 7). Nur `CLAUDE.md`.~~ **Erledigt 08.09.2026**, eigener Commit. | nein | keins |
-| **1** | Bausteine anlegen: `buildMerksatz()`, `buildProgress()`, `buildWegweiser()`. Rein additiv — **kein Aufrufer**, kein Screen ändert sich. `node --check app.js`. | nein | sehr klein |
-| **2** | **Pilot.** Nur `renderLesson()` nutzt die Bausteine. Alle anderen 48 Screens laufen unverändert weiter. CSS für `.wegweiser` in `styles.css`, nur mit vorhandenen Tokens. | ja, 1 Screen | klein, isoliert |
-| **3** | **Hinsehen, nicht bauen.** Pilot mit 3–5 Personen der Zielgruppe durchgehen (`beobachtungsbogen.html`). §13, Gamification §6. Ergebnis entscheidet über Stufe 4. | — | — |
+| **1** | ~~Bausteine anlegen: `buildMerksatz()`, `buildProgress()`, `buildWegweiser()`.~~ **Erledigt 08.09.2026, kleiner geschnitten:** nur `buildRememberBox()` (Merksatz), Commit `8e83e32`. Fortschritt/Wegweiser bleiben zurückgestellt. Rein additiv, `node --check app.js` sauber. | nein | sehr klein |
+| **2** | ~~**Pilot.** Nur `renderLesson()` nutzt die Bausteine.~~ **Erledigt 08.09.2026:** `renderLesson()` nutzt `buildRememberBox()` für den "Wichtig"-Kasten, Commit `b183533`. Vorlesen + Mitmarkierung mit Playwright vorher/nachher verglichen, byte-identisch. Die lokale `blockRead`-Closure bleibt — 5 weitere Aufrufer (text/bullets/examples/warning/success) nutzen sie noch. | ja, 1 Kasten auf 1 Screen | klein, isoliert |
+| **3** | **Läuft:** Hinsehen, nicht bauen. Prüf-Notiz für die Prüfgruppen-Sitzung liegt in `docs/pruefgruppe-merksatz-pilot.md`. **Wartet auf Freigabe aus der Sitzung**, bevor Stufe 4 beginnt. | — | — |
 | **4** | Ausrollen in dieser Reihenfolge: `renderCompletionPage` → `renderPracticeFeedbackPage` → Quiz (`renderQuizQuestion/FeedbackPage/Result`) → `renderTrainingMessage/Result` → `renderTopicChoice`. Ein Screen pro Commit. | ja | mittel |
 | **5** | Aufräumen: `buildStepPath()` und `buildCompletionProgress()` entfernen — **erst wenn `rg` null Aufrufer zeigt**. Ggf. die tote `.progress-area` klären. | nein | klein |
 
