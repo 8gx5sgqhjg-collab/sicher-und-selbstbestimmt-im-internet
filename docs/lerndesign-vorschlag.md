@@ -346,7 +346,7 @@ Befund (`rg`, ausgezählt):
 - In `app.js` ist es nur noch **Rückfallzweig** (`getLessonsForMode()`, :3976),
   hinter `topic.einfachLessons` (:3955). Der Kommentar :3972–3975 erklärt es.
   Da 0 Themen ohne `einfachLessons` existieren, läuft der Zweig **nie**.
-- Der Kurz-Modus liefert heute **60 von 129** Lektionen (46 %), gleichmäßig
+- Der Kurz-Modus liefert heute **60 von 129** Lektionen (47 %), gleichmäßig
   **5 Schritte je Thema** (Start + 3 Kern + „Das merke ich mir"). Die
   Themenseite beziffert das seit Prüfbericht B8 sichtbar („Kurz — 5 Schritte").
 
