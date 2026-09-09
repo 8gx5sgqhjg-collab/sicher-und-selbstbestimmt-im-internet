@@ -4,7 +4,7 @@
    Version: update CACHE_VERSION bei jeder Veröffentlichung
    ============================================================= */
 
-const CACHE_VERSION = "v2026-12n";
+const CACHE_VERSION = "v2026-12o";
 const CACHE_NAME    = "sicher-im-netz-" + CACHE_VERSION;
 /* Altlast: früher lagen die Piktogramme bei static.arasaac.org.
    Heute sind es eigene SVGs in assets/pictograms/. Dieser alte Cache
@@ -201,7 +201,7 @@ function offlineFallback() {
   <h1>Du bist gerade offline.</h1>
   <p>Diese Seite konnte nicht geladen werden.<br>
      Bitte verbinde dich mit dem Internet und lade die Seite neu.</p>
-  <p><a href="/">Nochmal versuchen</a></p>
+  <p><a href="./">Nochmal versuchen</a></p>
 </body>
 </html>`;
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
