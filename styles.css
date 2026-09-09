@@ -1420,28 +1420,34 @@ html.no-motion *::after {
 .intro-word p { margin: 0; }
 
 /* Station 0 – Lern-Leitsatz „So lernst du." direkt unter der Begrüßung
-   (docs/gesamtlernprinzip-stationen.md §0.1). Bewusst kompakt: Der
-   Start-Knopf muss über der Falz bleiben (August-2026-Befund). */
-.intro-principle {
-  margin: 12px 0 4px;
+   (docs/gesamtlernprinzip-stationen.md §0.1). Schlichte Zeile ohne Kasten (F1). */
+.intro-principle-plain {
+  margin: 12px 0 10px;
   text-align: left;
-  background: var(--surface);
-  border: 2px solid var(--line);
-  border-radius: var(--radius-m);
-  padding: 12px 16px;
-}
-.intro-principle h3 { margin: 0 0 8px; }
-.intro-principle-line {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
   font-size: 1.05rem;
-  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
 }
-.intro-principle-step { display: inline-flex; align-items: center; gap: 6px; }
-.intro-principle-arrow { color: var(--ink-soft); font-weight: 400; }
+
+/* Einklappbare Angebots-Details (F1) */
+.intro-more {
+  margin: 16px 0 0;
+  text-align: left;
+}
+.intro-more summary {
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.intro-more summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+.intro-more[open] summary {
+  margin-bottom: 8px;
+}
 
 /* Stations-Etikett (Faden Merken → Prüfen → Handeln), siehe app.js stationBadge() */
 .station-badge {
@@ -1754,6 +1760,7 @@ html.no-motion *::after {
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .device-card:hover { border-color: var(--accent); background: var(--surface-soft); transform: translateY(-2px); }
+.device-card.is-active { border-color: var(--accent); background: var(--surface-soft); box-shadow: var(--shadow); }
 .device-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .device-card strong { font-size: 1.2rem; color: var(--ink); }
 .device-card span:last-child { font-size: 0.98rem; color: var(--ink-soft); }
@@ -5248,6 +5255,26 @@ body.simple-mode .practice-box {
   border-radius: 999px;
   white-space: nowrap;
   z-index: 2;
+}
+.topic-start-badge--first,
+.topic-card .topic-start-badge--first {
+  background: var(--good);
+  color: var(--on-accent);
+}
+
+/* Chip Menü-Erinnerung beim ersten Themen-Besuch (F3) */
+.menu-hint-chip {
+  display: block;
+  max-width: fit-content;
+  margin: 20px auto 10px;
+  padding: 8px 18px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* Üben-Sektion unter den Themen */

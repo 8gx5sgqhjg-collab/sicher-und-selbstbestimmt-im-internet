@@ -1369,11 +1369,11 @@ const READ_CARD_SVG = `<svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true
 
 function cleanSpeechText(text) {
   return String(text || "")
-    .replace(/\s+/g, " ")
     .replace(/[←→➜]/g, "")
     .replace(/[✓✕✔✅]/g, "")     /* Haken/Kreuze werden sonst als Zeichen gesprochen */
     .replace(/ℹ️|👋|📵|📖|🎉|🧠/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
     .replace(/%/g, " Prozent")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -1787,13 +1787,13 @@ function renderLegalFooter() {
 
 function chooseLanguage(level) {
   setLanguageLevel(level);
-  /* Im Erststart geht es nach der Sprache direkt zur Menue-Einweisung.
+  /* Im Erststart geht es nach der Sprache direkt zu den Themen (F3).
      Vorwissen und Vorlesen werden nicht mehr vorab gefragt, sondern erst
      hinter dem ersten Thema (Pruefbericht B10) - dann kann die Person die
      Frage aus Erfahrung beantworten statt ins Blaue.
      Beim späteren Ändern zurück dorthin, wo die Person herkam:
      Einstellungen, das gerade offene Thema, sonst die Themenübersicht. */
-  if (onboarding) { onboarding = false; return renderMenuIntro(); }
+  if (onboarding) { onboarding = false; return renderMenu(); }
   if (activeTab === "einstellungen") return renderSettingsPage();
   if (currentTopicId && getTopicById(currentTopicId)) return renderTopicChoice(currentTopicId);
   renderMenu();
@@ -1851,7 +1851,7 @@ function chooseVorwissen(v) {
 function renderVorleseFrage() {
   if (pGet(AUTO_READ_GEFRAGT_KEY) === "1" || !supportsSpeech()) {
     if (setupWeiterZu) { const weiter = setupWeiterZu; setupWeiterZu = null; return weiter(); }
-    return renderMenuIntro();
+    return renderMenu();
   }
   pSet(AUTO_READ_GEFRAGT_KEY, "1");
   stopReading();
@@ -1887,7 +1887,7 @@ function renderVorleseFrage() {
 function chooseAutoRead(an) {
   setAutoRead(an);
   if (setupWeiterZu) { const weiter = setupWeiterZu; setupWeiterZu = null; return weiter(); }
-  renderMenuIntro();
+  renderMenu();
 }
 
 /* ---- Zwei Restfragen hinter dem ersten Thema (Pruefbericht B10) ----
@@ -1974,17 +1974,31 @@ function renderProfilePicker() {
   renderLegalFooter();
 }
 
-/* Erststart-Frage: eigenes oder geteiltes Gerät. */
-function renderDeviceQuestion() {
+/* Erststart-Frage: eigenes oder geteiltes Gerät (F2). */
+function renderDeviceQuestion(showSharedChoice = false) {
   stopReading();
   setProgressVisible(false);
   setBottomNavVisible(false);
-  setHeader("Sicher und selbstbestimmt im Internet", "Start", "Start", "Wer benutzt dieses Gerät?", 0);
+  setHeader("Sicher und selbstbestimmt im Internet", "Start", "Start", "Wer lernt heute?", 0);
   showNav(false, false);
+
+  const sharedBlock = showSharedChoice ? `
+      <div class="device-sign-choice" style="margin-top: 24px; text-align: center;">
+        <h3 class="profile-picker-title" style="font-size: 1.25rem; margin-bottom: 12px;">Such dir ein Zeichen aus:</h3>
+        <div class="sign-icon-grid">
+          ${SIGN_ICONS.map(ic => `
+            <button type="button" class="sign-pick${signDraft.icon === ic.key ? " is-active" : ""}" onclick="pickDeviceSignIcon('${ic.key}')" aria-label="${escapeHtml(ic.name)} wählen">
+              <span class="sign-pick-bubble"><svg viewBox="0 0 100 100" aria-hidden="true">${ic.svg.replace(/#fff/g, "#00528f")}</svg></span>
+              <span class="sign-pick-name">${escapeHtml(ic.name)}</span>
+            </button>`).join("")}
+        </div>
+        <button type="button" class="intro-start-button" onclick="finishSign(null)" style="margin-top: 16px;">Weiter</button>
+      </div>` : "";
+
   content.innerHTML = `
     ${buildReadingToolbar()}
     <section class="profile-new" data-readable="true">
-      <h2 class="profile-picker-title">Willkommen!</h2>
+      <h2 class="profile-picker-title">Wer lernt heute?</h2>
       <p class="profile-picker-intro">Eine Frage zum Anfang: Benutzt du dieses Gerät allein? Oder benutzen es mehrere Personen?</p>
       <div class="device-grid">
         <button type="button" class="device-card" onclick="chooseDevice(false)">
@@ -1992,28 +2006,48 @@ function renderDeviceQuestion() {
           <strong>Nur ich</strong>
           <span>Mein eigenes Handy oder Tablet.</span>
         </button>
-        <button type="button" class="device-card" onclick="chooseDevice(true)">
+        <button type="button" class="device-card${showSharedChoice ? " is-active" : ""}" onclick="chooseDevice(true)">
           <span class="device-icon" aria-hidden="true">👥</span>
           <strong>Mehrere Personen</strong>
           <span>Ein Gerät, das wir uns teilen.</span>
         </button>
       </div>
+      ${sharedBlock}
     </section>
   `;
   focusContent();
   renderLegalFooter();
 }
 
+function pickDeviceSignIcon(key) {
+  const n = profiles.length;
+  signDraft = {
+    icon: key,
+    color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
+    number: n % 11
+  };
+  renderDeviceQuestion(true);
+}
+
 function chooseDevice(shared) {
   setDeviceShared(shared);
-  signDraft = { icon: null, color: null, number: null };
-  if (shared) return renderBuildSign(0, null);
+  const n = profiles.length;
+  if (shared) {
+    if (!signDraft.icon) {
+      signDraft = {
+        icon: SIGN_ICONS[n % SIGN_ICONS.length].key,
+        color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
+        number: n % 11
+      };
+    }
+    renderDeviceQuestion(true);
+    return;
+  }
   /* Eigenes Geraet: Das Zeichen dient nur dazu, mehrere Personen auf einem
      geteilten Geraet auseinanderzuhalten. Wer gerade „Nur ich" geantwortet
      hat, brauchte trotzdem drei Bildschirme mit zusammen 34 Auswahlfeldern
      (Pruefbericht B10). Jetzt vergibt die App das Zeichen selbst; unter
      Einstellungen laesst es sich jederzeit aendern. */
-  const n = profiles.length;
   signDraft = {
     icon: SIGN_ICONS[n % SIGN_ICONS.length].key,
     color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
@@ -2558,7 +2592,7 @@ function answerDailyQuestion(index) {
   announce(feedback);
 }
 
-/* Menü-Erklärung als wiederverwendbarer Baustein (Einweisung + Hilfe) */
+/* Menü-Erklärung als wiederverwendbarer Baustein (dauerhaft in Hilfe) */
 function buildMenuExplainList() {
   return `
       <ul class="intro-offer-list">
@@ -2570,33 +2604,9 @@ function buildMenuExplainList() {
       </ul>`;
 }
 
-/* Eigener Einweisungs-Schritt: EIN Konzept (das Menü) auf EINEM Bildschirm.
-   Wird genau einmal gezeigt, danach steht die Erklärung dauerhaft in Hilfe. */
+/* Menü-Einweisungs-Zustand (F3): Chip beim ersten Themen-Besuch, Erklärungen dauerhaft in der Hilfe */
 const MENU_INTRO_KEY = "menue-gesehen";
 function menuIntroSeen() { return pGet(MENU_INTRO_KEY) === "1"; }
-function renderMenuIntro() {
-  if (menuIntroSeen()) return renderMenu();
-  pSet(MENU_INTRO_KEY, "1");
-  stopReading();
-  setProgressVisible(false);
-  setBottomNavVisible(false);
-  setHeader("Sicher und selbstbestimmt im Internet", "Das Menü", "Einweisung", "So findest du dich zurecht", 0);
-  setActiveTab("start");
-  setOrientation("Du bist bei der Einweisung. Gleich geht es zu den Themen.");
-  showNav(false, false);
-  content.innerHTML = `
-    ${buildReadingToolbar()}
-    <section class="intro-page" data-readable="true">
-      <div class="intro-offer">
-        <h3>Unten ist das Menü. Es ist immer da.</h3>
-        ${buildMenuExplainList()}
-      </div>
-      <button type="button" class="intro-start-button" onclick="renderMenu()">Alles klar. Zu den Themen.</button>
-    </section>
-  `;
-  focusContent();
-  renderLegalFooter();
-}
 
 function renderIntro() {
   stopReading();
@@ -2649,16 +2659,7 @@ function renderIntro() {
         </div>
       </div>
 
-      <div class="intro-principle">
-        <h3>So lernst du.</h3>
-        <p class="intro-principle-line">
-          <span class="intro-principle-step"><span aria-hidden="true">🧠</span>Merken</span>
-          <span class="intro-principle-arrow" aria-hidden="true">→</span>
-          <span class="intro-principle-step"><span aria-hidden="true">✅</span>Prüfen</span>
-          <span class="intro-principle-arrow" aria-hidden="true">→</span>
-          <span class="intro-principle-step"><span aria-hidden="true">➜</span>Handeln</span>
-        </p>
-      </div>
+      <p class="intro-principle-plain"><strong>So lernst du:</strong> <span aria-hidden="true">🧠</span> Merken <span aria-hidden="true">→</span> <span aria-hidden="true">✅</span> Prüfen <span aria-hidden="true">→</span> <span aria-hidden="true">➜</span> Handeln</p>
 
       ${isReturning ? `
       <button type="button" class="intro-start-button" onclick="renderMenu()">Zu den Themen</button>
@@ -2674,15 +2675,17 @@ function renderIntro() {
       ${resumeCard}
 
       ${isReturning ? "" : `
-      <div class="intro-offer">
-        <h3>Das kannst du hier machen:</h3>
-        <ul class="intro-offer-list">
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("start")}</span><span>Du lernst über 12 Themen. Zum Beispiel: WhatsApp, Betrug und KI.</span></li>
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("message")}</span><span>Du kannst dir alles vorlesen lassen.</span></li>
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("help")}</span><span>Du lernst allein. Oder mit einer Begleit-Person.</span></li>
-        </ul>
-      </div>
-      <p class="intro-meta">12 Themen &nbsp;·&nbsp; 3 Sprachstufen &nbsp;·&nbsp; kostenlos &nbsp;·&nbsp; kein Name nötig</p>
+      <details class="intro-more"><summary>Mehr über dieses Angebot</summary>
+        <div class="intro-offer">
+          <h3>Das kannst du hier machen:</h3>
+          <ul class="intro-offer-list">
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("start")}</span><span>Du lernst über 12 Themen. Zum Beispiel: WhatsApp, Betrug und KI.</span></li>
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("message")}</span><span>Du kannst dir alles vorlesen lassen.</span></li>
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("help")}</span><span>Du lernst allein. Oder mit einer Begleit-Person.</span></li>
+          </ul>
+        </div>
+        <p class="intro-meta">12 Themen &nbsp;·&nbsp; 3 Sprachstufen &nbsp;·&nbsp; kostenlos &nbsp;·&nbsp; kein Name nötig</p>
+      </details>
       `}
     </section>
   `;
@@ -2696,7 +2699,7 @@ function renderIntro() {
 function introQuickStart() {
   setLanguageLevel("leicht");
   pSet(VORWISSEN_KEY, "neu");
-  renderMenuIntro();
+  renderMenu();
 }
 
 function introStart() {
@@ -2783,6 +2786,11 @@ function renderMenu() {
   quizScore = 0;
   quizAnsweredCorrect = new Set();
 
+  const ersterBesuch = !menuIntroSeen();
+  if (ersterBesuch) {
+    pSet(MENU_INTRO_KEY, "1");
+  }
+
   setProgressVisible(false);
   setBottomNavVisible(false);
   setHeader("Sicher und selbstbestimmt im Internet", "Thema auswählen", "Themenübersicht", "Wähle ein Thema", 0);
@@ -2793,13 +2801,15 @@ function renderMenu() {
 
   const nextSuggestion = getNextTopicSuggestion();
   const anyTopicDone = countDoneTopics() > 0;
-  const cardFor = (topic) => {
+  const cardFor = (topic, isFirstCardOfFirstGroup) => {
     const done = isTopicDone(topic.id);
-    const suggested = !done && nextSuggestion && topic.id === nextSuggestion.id;
+    const showFirstBadge = ersterBesuch && isFirstCardOfFirstGroup;
+    const showNextBadge = !ersterBesuch && anyTopicDone && nextSuggestion && topic.id === nextSuggestion.id && !done;
     return `
     <div class="card-read-pair card-read-pair--topic">
       <button type="button" class="topic-card topic-${escapeHtml(topic.id)}${done ? " topic-card--done" : ""}" style="${getTopicColorStyle(topic.id)}" onclick="renderTopicChoice('${escapeHtml(topic.id)}')">
-      ${suggested ? `<span class="topic-start-badge">${anyTopicDone ? "Dein nächstes Thema" : "Starte hier"}</span>` : ""}
+      ${showFirstBadge ? `<span class="topic-start-badge topic-start-badge--first">Fang hier an</span>` : ""}
+      ${showNextBadge ? `<span class="topic-start-badge">Dein nächstes Thema</span>` : ""}
       ${done ? `<span class="topic-done-corner" aria-label="Geschafft" title="Geschafft">✓</span>` : ""}
       <span class="topic-icon" aria-hidden="true">${getIconHtml(topic.icon || "start")}</span>
       <span class="topic-title">${escapeHtml(topic.title)}</span>
@@ -2815,19 +2825,19 @@ function renderMenu() {
   /* Gruppen aufbauen; Themen ohne Gruppe landen sicherheitshalber am Ende */
   const grouped = new Set(TOPIC_GROUPS.flatMap(g => g.ids));
   const rest = topics.filter(t => !grouped.has(t.id));
-  const groupSections = TOPIC_GROUPS.map(g => {
+  const groupSections = TOPIC_GROUPS.map((g, gIdx) => {
     const groupTopics = g.ids.map(id => topics.find(t => t.id === id)).filter(Boolean);
     if (!groupTopics.length) return "";
     return `
       <section class="topic-group" aria-label="${escapeHtml(g.title)}">
         <h3 class="topic-grid-title">${escapeHtml(g.title)}</h3>
         <p class="topic-grid-hint">${escapeHtml(g.hint)}</p>
-        <div class="topic-grid">${groupTopics.map(cardFor).join("")}</div>
+        <div class="topic-grid">${groupTopics.map((t, tIdx) => cardFor(t, gIdx === 0 && tIdx === 0)).join("")}</div>
       </section>`;
   }).join("") + (rest.length ? `
       <section class="topic-group" aria-label="Weitere Themen">
         <h3 class="topic-grid-title">Weitere Themen</h3>
-        <div class="topic-grid">${rest.map(cardFor).join("")}</div>
+        <div class="topic-grid">${rest.map(t => cardFor(t, false)).join("")}</div>
       </section>` : "");
 
   /* Lernweg-Auswahl: selbstbestimmt, freiwillig, jederzeit änderbar. */
@@ -2887,6 +2897,7 @@ function renderMenu() {
       <p class="topic-grid-hint">Tippe auf ein Thema. Dann geht es los.</p>
       ${roleFigure("themen")}
       ${groupSections}
+      ${ersterBesuch ? `<div class="menu-hint-chip">Das Menü unten ist immer da.</div>` : ""}
     </section>
   `;
   focusContent();
@@ -3295,8 +3306,8 @@ function renderHelpPage() {
         <p><a class="setting-big-button pruefheft-link" href="pruefheft.html">Zum Prüf-Heft</a></p>
       </div>
 
-      <div class="intro-offer" role="region" aria-label="So findest du dich zurecht">
-        <h3>So findest du dich zurecht: das Menü unten</h3>
+      <div class="intro-offer" role="region" aria-label="Das Menü">
+        <h3>Das Menü ${sectionReadChip("Das Menü")}</h3>
         ${buildMenuExplainList()}
       </div>
     </section>
