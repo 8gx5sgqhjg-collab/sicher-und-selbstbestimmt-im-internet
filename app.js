@@ -2669,6 +2669,17 @@ function renderIntro() {
         </div>
       </div>
 
+      <div class="intro-principle">
+        <h3>So lernst du.</h3>
+        <p class="intro-principle-line">
+          <span class="intro-principle-step"><span aria-hidden="true">🧠</span>Merken</span>
+          <span class="intro-principle-arrow" aria-hidden="true">→</span>
+          <span class="intro-principle-step"><span aria-hidden="true">✅</span>Prüfen</span>
+          <span class="intro-principle-arrow" aria-hidden="true">→</span>
+          <span class="intro-principle-step"><span aria-hidden="true">➜</span>Handeln</span>
+        </p>
+      </div>
+
       ${isReturning ? `
       <button type="button" class="intro-start-button" onclick="renderMenu()">Zu den Themen</button>
       ` : `
