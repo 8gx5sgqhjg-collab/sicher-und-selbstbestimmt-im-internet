@@ -4106,11 +4106,8 @@ function blockRead(t) {
      Rückmeldungen zum Spielstand, keine Merksätze.
 
    opts.vorlesen (Standard true): steuert den Block-Vorlese-Knopf.
-   Auf false setzen an Stellen, die heute KEINEN eigenen Knopf haben — dort
-   wird der Kasten nur über das seitenweite Vorlesen mitgelesen. So bleibt
-   die Umstellung verhaltensneutral, statt nebenbei 5 neue Knöpfe
-   einzuführen. Vorlesen überall anzubieten ist eine eigene Entscheidung
-   (§3 Vorlesen als Angebot) und gehört in einen eigenen Schritt. */
+   Seit Stufe 4b (September 2026) haben ALLE Merksatz-Kästen den Knopf.
+   Die Option bleibt für künftige Ausnahmen erhalten. */
 function buildRememberBox(titel, text, opts) {
   opts = opts || {};
   const vorlesen = opts.vorlesen !== false;
@@ -4395,7 +4392,7 @@ function renderPracticeFeedbackPage(index, correctIndex) {
             Frage "gibt es überhaupt einen Merksatz?" gehört in den Baustein, nicht
             an jede Aufrufstelle. */""}
       ${stationBadge("merken")}
-      ${isCorrect ? buildRememberBox("Wichtig", practice.remember, { vorlesen: false }) : ""}
+      ${isCorrect ? buildRememberBox("Wichtig", practice.remember) : ""}
       ${regelHinweis}
 
       <div class="feedback-actions">
@@ -5461,7 +5458,7 @@ function startTrainingInbox() {
           <h3>Dein Postfach</h3>
           <p class="remember-text">Du hast ${geschafft.length} ${geschafft.length === 1 ? "Thema" : "Themen"} geschafft. Deshalb liegen ${pool.length} Nachrichten in deinem Postfach.${pool.length > POSTFACH_MAX ? ` Du bekommst ${POSTFACH_MAX} davon – jedes Mal andere.` : ""}</p>
         </div>
-        ${buildRememberBox("Wichtig", "Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
+        ${buildRememberBox("Wichtig", "Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.")}
         <div class="certificate-actions">
           <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">${anzahl} Nachrichten prüfen</button>
           <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
@@ -5644,7 +5641,7 @@ function renderTrainingResult() {
       <p>${escapeHtml(lob)}</p>
       ${themen.length ? `<p>Die Nachrichten kamen aus: ${escapeHtml(themen.join(", "))}.</p>` : ""}
       ${waechst}
-      ${buildRememberBox("Wichtig", "Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.")}
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">Noch einmal üben</button>
         <button type="button" class="nav-button secondary" onclick="renderRegelKarte()">Deine Karte ansehen</button>
@@ -5936,7 +5933,7 @@ function startScenario(topicId) {
         <h2>Übungs-Handy: ${escapeHtml(scn.titel || topic.title)}</h2>
       </div>
       ${(scn.einstieg || []).map(s => `<p>${escapeHtml(s)}</p>`).join("")}
-      ${buildRememberBox("Wichtig", "Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.")}
       ${rundenWahl}
       <div class="certificate-actions">
         ${rundenWahl ? "" : `<button type="button" class="quiz-link quiz-button" onclick="beginScenario()">Üben starten</button>`}
@@ -6158,7 +6155,7 @@ function renderScenarioResult() {
         <h3>Das nimmst du mit</h3>
         <ul class="sz-merkliste">${merksaetze}</ul>
       </div>` : ""}
-      ${buildRememberBox("Wichtig", "Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.")}
       <div class="certificate-actions">
         ${(naechste && bestanden)
           ? `<button type="button" class="quiz-link quiz-button" onclick="beginScenario(${naechste})">${escapeHtml(stufenName(naechste))} starten</button>`
