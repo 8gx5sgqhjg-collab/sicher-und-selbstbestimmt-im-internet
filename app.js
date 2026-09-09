@@ -4069,7 +4069,31 @@ function renderSelfAssessment() {
    kein neues Balken-CSS nötig ist. Reine Funktion, kein DOM-Eingriff;
    total < 2 ergibt "" (ein einzelner Schritt braucht keinen Balken).
    ------------------------------------------------------------ */
-function buildProgress(done, total) {
+function buildProgress(done, total, opts) {
+  /* Abschluss-Variante (Paket V3): „X von 12 Themen" für die
+     Abschluss-Seite – GrandFinish, Themen-Balken und Speicher-Angebot.
+     Exakt das bisherige buildCompletionProgress-Muster, nur mit
+     übergebenen Zahlen statt fest verdrahteten. */
+  if (opts && opts.complete) {
+    const saveOffer = !isProgressEnabled() ? `
+    <div class="progress-consent">
+      <p class="progress-consent-title">Soll ich mir merken, welche Themen du geschafft hast?</p>
+      <p class="progress-consent-note">Das wird nur auf diesem Gerät gespeichert. Ohne Namen. Du kannst es jederzeit löschen.</p>
+      <button type="button" class="utility-button" onclick="enableProgressInline(this)">Ja, Lernstand merken</button>
+    </div>` : "";
+    return `
+    ${buildGrandFinish()}
+    <div class="hero-progress-row" role="region" aria-label="Dein Lernfortschritt">
+      <div class="hero-progress-numbers">
+        <span class="hero-progress-count">${done}</span>
+        <span class="hero-progress-of">von ${total} Themen geschafft</span>
+      </div>
+      <div class="hero-progress-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${total}" aria-label="${done} von ${total} Themen">
+        <div class="hero-progress-fill" style="width:${Math.round((done / total) * 100)}%"></div>
+      </div>
+    </div>
+    ${saveOffer}`;
+  }
   if (!total || total < 2) return "";
   const currentIndex = Math.max(0, Math.min(total - 1, done));
   const remaining = total - currentIndex - 1;
@@ -4762,7 +4786,7 @@ function renderCompletionPage(topicId) {
 
           ${buildClosingSelfCheck(topic)}
 
-          ${buildCompletionProgress()}
+          ${buildProgress(countDoneTopics(), topics.length, { complete: true })}
 
           <div class="einfach-done-actions">
             ${/* Hauptaktion des KURZEN Wegs ist der lange Weg zum selben Thema
@@ -4832,7 +4856,7 @@ function renderCompletionPage(topicId) {
 
         ${buildClosingSelfCheck(topic)}
 
-        ${buildCompletionProgress()}
+        ${buildProgress(countDoneTopics(), topics.length, { complete: true })}
 
         <div class="completion-actions">
           ${nextActionHtml()}
