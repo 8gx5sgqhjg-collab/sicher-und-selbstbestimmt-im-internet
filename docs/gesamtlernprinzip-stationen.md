@@ -400,5 +400,18 @@ Lesehilfe: **🧠** = Station 3 · **✅** = Station 4 · **➜** = Station 5.
    entschieden; eine dritte Runde wäre neuer Inhalt. Die Finder-Kopfzeile („Beispiel X
    von 2", dynamisch über `SAMPLE_ROUNDS.length`) ist bereits korrekt. Ein
    `CACHE_VERSION`-Bump deckt Einstiegsseite und Fix gemeinsam ab.
+9. **Kleine Audit-Korrekturen reiten im selben Stapel** (eigener Mini-Commit; der eine
+   `CACHE_VERSION`-Bump des Stapels deckt alles; vollständige Fundliste:
+   `docs/AUDIT_BEFUNDE_2026-09-09.md`):
+   - **Offline-Seite:** „Nochmal versuchen" verlinkt auf `href="/"` (`sw.js:204`) und
+     führt damit auf GitHub Pages aus der App hinaus → `href="./"`.
+   - **Kommentar:** `content-de.js:1748–1750` sagt, „einige Themen" (KI, Fake News,
+     Betrug, Einkaufen) hätten ihre Fragen unter `quizQuestions` — real haben heute
+     **alle 12 Themen** `quizQuestions` (kein Thema mehr `quiz`).
+   - **Veröffentlichungs-Daten:** `dateModified` im JSON-LD (`index.html:40`) und die
+     15 `lastmod`-Einträge in `sitemap.xml` (beide 2026-06-14) auf das Releasedatum
+     setzen.
+   Beschluss vom 09.09.2026: `praxis/*` (3,0 MB) und `material/*` (3,9 MB) bleiben
+   **bewusst online** — sie kommen nicht in den Precache.
 
 **P1–P6 und S1–S4 sind entschieden. Gebaut wird erst nach deiner Freigabe dieses Entwurfs.**
