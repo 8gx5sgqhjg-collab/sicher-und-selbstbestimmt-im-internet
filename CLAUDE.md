@@ -198,6 +198,7 @@ Pädagogische Rahmung konsistent über alle Module: Lernziel + Aktivierung (Enga
 ## 13. Partizipation, Evaluation, Aktualität
 
 - **Co-Design:** Vor offiziellem Einsatz Prüfung durch eine **Prüfgruppe** von Menschen mit Lern-Schwierigkeiten — auf Verständlichkeit der **Texte und der Piktogramme**. Unsere Texte sind ein fachlich sauberer Entwurf dafür.
+  - **Beschluss 09.09.2026:** Die Bauphase läuft ohne einzelne Prüfgruppen-Sitzungen voraus. Gebaut wird paketweise auf dem Arena-Branch; die Prüfung mit der Prüfgruppe erfolgt **gebündelt, wenn die Plattform fertig ist** — eine reale Sitzung mit Menschen mit Lern-Schwierigkeiten. Der Katalog in §18 Punkt 8 bleibt offen und ist die **Prüfliste** für diese Sitzung. Bis dahin gilt: neue Oberflächen-Worte nur als zentrale, leicht änderbare Etiketten bauen (Stations-Dokument §5, Regel 1).
 - **Datensparsame Wirkungs-Evaluation:** strukturierte Beobachtung statt Datensammlung (Navigierbarkeit, Verständlichkeit, Nutzung des Vorlesens, kann die Person das Transfer-Ziel benennen?). Ergebnisse fließen in die nächste Iteration. Kein Tracking, keine Lernanalyse über die Person.
 - **Aktualität:** Inhalte zu Betrug, Plattformen und KI veralten schnell. Bei Änderungen auf seriöse, aktuelle Quellen achten (z. B. klicksafe, BSI, polizeiliche Kriminalprävention, jugend.support) und überprüfungsbedürftige Stellen markieren.
 
