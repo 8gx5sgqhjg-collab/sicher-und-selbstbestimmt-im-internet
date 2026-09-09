@@ -973,7 +973,12 @@ const ROLE_FIGURES = {
   achtung:    { file: "alex-tilda-achtung.webp",    alt: "Tilda hebt die Hand. Achtung: Hier ist Vorsicht wichtig." },
   hilfe:      { file: "alex-tilda-hilfe.webp",      alt: "Alex zeigt dir, wo du Hilfe findest." },
   erfolg:     { file: "alex-tilda-erfolg.webp",     alt: "Alex und Tilda freuen sich mit dir. Gut gemacht." },
-  nachdenken: { file: "alex-tilda-nachdenken.webp", alt: "Tilda überlegt. Was weißt du schon?" }
+  nachdenken: { file: "alex-tilda-nachdenken.webp", alt: "Tilda überlegt. Was weißt du schon?" },
+  winken:         { file: "alex-tilda-winken.png",         alt: "Alex und Tilda winken dir zu. Hier beginnt alles." },
+  themen:         { file: "alex-tilda-themen.png",         alt: "Tilda zeigt auf die Themen. Such dir etwas aus." },
+  lernweg:        { file: "alex-tilda-lernweg.png",        alt: "Tilda gibt dir Daumen hoch. Das hast du geschafft." },
+  einstellungen:  { file: "alex-tilda-einstellungen.png",  alt: "Alex mit Werkzeug. Stell es dir passend ein." },
+  ruhig:          { file: "alex-tilda-ruhig.png",          alt: "Tilda bleibt ruhig. Das macht nichts." }
 };
 
 function roleFigure(role, extraClass = "") {
@@ -2637,7 +2642,7 @@ function renderIntro() {
            Der Satz "In kurzen Schritten. Mit Bildern und zum Vorlesen."
            entfaellt: er steht inhaltlich in der Liste weiter unten. -->
       <div class="intro-welcome">
-        <img class="intro-welcome-figure" src="assets/illustrations/alex-und-tilda.svg" alt="" aria-hidden="true">
+        ${roleFigure("winken", "intro-welcome-figure")}
         <div class="intro-welcome-text">
           <h2>Willkommen!</h2>
           <p>Alex und Tilda begleiten dich. Du lernst, sicher und selbstbestimmt im Internet zu sein.</p>
@@ -2880,6 +2885,7 @@ function renderMenu() {
       ${buildResumeLessonChip()}
       <h2 class="topic-grid-title">Wähle ein Thema</h2>
       <p class="topic-grid-hint">Tippe auf ein Thema. Dann geht es los.</p>
+      ${roleFigure("themen")}
       ${groupSections}
     </section>
   `;
@@ -3048,6 +3054,7 @@ function renderMyPath() {
     <section class="start-page">
       ${buildReadingToolbar()}
       <h2 class="topic-grid-title">Mein Lernweg</h2>
+      ${roleFigure("lernweg")}
       ${hierBistDu}
       ${buildGrandFinish()}
       <section class="path-block" aria-label="Das hast du geschafft">
@@ -3334,6 +3341,7 @@ function renderSettingsPage() {
     <section class="start-page" data-readable="true">
       ${buildReadingToolbar()}
       <h2 class="topic-grid-title">Einstellungen</h2>
+      ${roleFigure("einstellungen")}
       <p class="topic-grid-hint">Hier kannst du vieles einstellen. So passt die Seite gut zu dir.</p>
       ${buildResumeLessonChip()}
 
@@ -4697,6 +4705,7 @@ function renderCompletionPage(topicId) {
           </div>
 
           <h2 class="einfach-done-title">Super gemacht!</h2>
+          ${roleFigure("erfolg")}
 
           <p class="einfach-done-text">Du hast gelernt:</p>
           <p class="einfach-done-topic"><strong>${escapeHtml(topic.title)}</strong></p>
@@ -4767,6 +4776,7 @@ function renderCompletionPage(topicId) {
         </div>
 
         <p>Du hast das Thema <strong>${escapeHtml(topic.title)}</strong> geschafft.</p>
+        ${roleFigure("erfolg")}
 
         ${buildGoalsDone(topic)}
 
@@ -5065,6 +5075,7 @@ function renderQuizFeedbackPage(index) {
         <h3>Erklärung:</h3>
         <p>${escapeHtml(explanation)}</p>
       </div>
+      ${!isCorrect ? roleFigure("ruhig") : ""}
 
       ${regelHinweis}
 

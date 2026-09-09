@@ -4,7 +4,7 @@
    Version: update CACHE_VERSION bei jeder Veröffentlichung
    ============================================================= */
 
-const CACHE_VERSION = "v2026-12s";
+const CACHE_VERSION = "v2026-12t";
 const CACHE_NAME    = "sicher-im-netz-" + CACHE_VERSION;
 /* Altlast: früher lagen die Piktogramme bei static.arasaac.org.
    Heute sind es eigene SVGs in assets/pictograms/. Dieser alte Cache
@@ -59,6 +59,13 @@ const PRECACHE_URLS = [
      die jede Person beim ersten Besuch mitgeladen hat, ohne sie je zu
      sehen. Die Dateien bleiben im Repo, falls sie wieder eingebaut werden. */
   "./assets/illustrations/alex-und-tilda.svg",
+
+  /* Wegzeichen-Figuren (Paket W, statisch, transparent) */
+  "./assets/figures/alex-tilda-winken.png",
+  "./assets/figures/alex-tilda-themen.png",
+  "./assets/figures/alex-tilda-lernweg.png",
+  "./assets/figures/alex-tilda-einstellungen.png",
+  "./assets/figures/alex-tilda-ruhig.png",
 
   /* Lektions-Bilder */
   "./assets/lessons/lock.svg",
