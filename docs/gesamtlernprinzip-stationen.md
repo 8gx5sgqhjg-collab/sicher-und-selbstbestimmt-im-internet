@@ -69,7 +69,7 @@ eine Person ankommt und **ein Thema wählt**. Von dort führt jeder Klick in den
 | Die 12 Themen-Kacheln (Titel + `desc` + Symbol + Vorlese-Knopf) | `renderMenu()` `cardFor()` `app.js:2805`, `TOPIC_GROUPS` `:2781` | **wortgleich übernehmen**, inkl. der 3 Gruppen |
 | Hilfe-Anker „Du brauchst Unterstützung?" | `buildSupportBox()` `app.js:3796` | vorhanden, **eingeklappt** |
 | Glossar „Was bedeutet:" | `app.js:708`, `.glossar-term` `:795` | vorhanden, **nur auf Antippen** |
-| Wegweiser / Fortschritt | `buildStepPath()` `app.js:4048` | **hier bewusst NICHT** — erst im Thema |
+| Wegweiser / Fortschritt | `buildProgress()` `app.js:4046` | **hier bewusst NICHT** — erst im Thema |
 
 ### 0.3 Warum ruhig und mit einem Fokus (§3)
 

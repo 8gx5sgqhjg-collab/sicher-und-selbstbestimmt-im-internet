@@ -962,11 +962,6 @@ function getIconHtml(iconName) {
   return `<img src="assets/icons/${escapeHtml(iconName)}.svg" alt="" aria-hidden="true">`;
 }
 
-function getIllustrationHtml(topic) {
-  if (!topic || !topic.illustration) return "";
-  return `<img class="topic-illustration" src="${escapeHtml(topic.illustration)}" alt="" aria-hidden="true">`;
-}
-
 /* ============================================================
    Alex-&-Tilda-Rollen-Figuren
    Feste Rollen mit beschreibenden Leichte-Sprache-Alt-Texten.
@@ -1349,8 +1344,8 @@ function updateReadingStatus(text) {
 }
 
 /* Auswahl-Karten, die selbst <button> sind. Ihr Text muss trotzdem vorgelesen
-   werden – siehe readCurrentPage(). An EINER Stelle definiert, damit die drei
-   Nutzungen (Auswahl, Satztrennung, collectReadableText) nicht auseinanderlaufen. */
+   werden – siehe readCurrentPage(). An EINER Stelle definiert, damit die beiden
+   Nutzungen (Auswahl, Satztrennung) nicht auseinanderlaufen. */
 const KARTEN_SELEKTOR = ".topic-card, .action-card, .learn-mode-card";
 /* Handlungs-Knoepfe, die mitgelesen werden. Sie bestehen aus mehreren
    Teilen (<strong>Kurz</strong><span>Nur das Wichtigste.</span>) und muessen
@@ -1375,28 +1370,6 @@ function cleanSpeechText(text) {
     .replace(/ℹ️|👋|📵|📖|🎉|🧠/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
     .replace(/%/g, " Prozent")
     .trim();
-}
-
-function collectReadableText() {
-  const root = document.querySelector("[data-readable='true']") || content;
-  if (!root) return "";
-
-  /* Hinweis: Diese Funktion wird derzeit nirgends aufgerufen – gelesen wird
-     ueber readCurrentPage(). Sie bleibt mit derselben Karten-Regel gepflegt,
-     damit sie bei spaeterer Nutzung nicht wieder Karten verschluckt. */
-  const KARTE = KARTEN_SELEKTOR;
-  const clone = root.cloneNode(true);
-  clone.querySelectorAll(
-    "button:not(.topic-card):not(.action-card):not(.learn-mode-card), footer, nav, .small-footer-notice, .nav, .progress-area, .reading-toolbar, .task-help-button, .support-help-button, .support-help-close, .card-read-button, img, svg"
-  ).forEach(node => node.remove());
-
-  const parts = [];
-  clone.querySelectorAll("h1, h2, h3, p, li, " + KARTE).forEach(node => {
-    if (!node.matches(KARTE) && node.closest(KARTE)) return;
-    const text = cleanSpeechText(node.textContent);
-    if (text) parts.push(text);
-  });
-  return parts.join(". ");
 }
 
 /* Liest die Seite Satz für Satz vor und hebt den aktuellen Satz hervor
@@ -4064,7 +4037,8 @@ function renderSelfAssessment() {
    buildProgress(done, total) ersetzt schrittweise die drei
    Fortschritts-Bauarten (Schritt-Balken, Abschluss-Balken,
    Quiz-Balken) durch EIN Muster: Balken plus Stand-Satz in Worten.
-   Wortlaut, Zahlen und aria-Werte entsprechen exakt buildStepPath –
+   Wortlaut, Zahlen und aria-Werte entsprechen exakt dem bisherigen
+   Schritt-Balken (bis V3 buildStepPath, in V4 entfernt) –
    wiederverwendet werden dessen CSS-Klassen (.step-bar-*), sodass
    kein neues Balken-CSS nötig ist. Reine Funktion, kein DOM-Eingriff;
    total < 2 ergibt "" (ein einzelner Schritt braucht keinen Balken).
@@ -4074,6 +4048,9 @@ function buildProgress(done, total, opts) {
      Abschluss-Seite – GrandFinish, Themen-Balken und Speicher-Angebot.
      Exakt das bisherige buildCompletionProgress-Muster, nur mit
      übergebenen Zahlen statt fest verdrahteten. */
+  /* Fortschritts-Rückmeldung direkt nach dem Erfolg (Bandura: unmittelbares
+     Erfolgserlebnis). Bietet – falls noch nicht aktiv – das freiwillige
+     Merken des Lernstands genau in dem Moment an, in dem es Sinn ergibt. */
   if (opts && opts.complete) {
     const saveOffer = !isProgressEnabled() ? `
     <div class="progress-consent">
@@ -4142,32 +4119,13 @@ function buildWegweiser(text, opts) {
     </div>`;
 }
 
-function buildStepPath(currentIndex, total) {
-  if (!total || total < 2) return "";
-  const remaining = total - currentIndex - 1;
-  const percent = Math.round(((currentIndex + 1) / total) * 100);
-  const summary = remaining > 0
-    ? `<span class="step-done-count">${currentIndex} geschafft</span> · noch ${remaining} ${remaining === 1 ? "Schritt" : "Schritte"}`
-    : `<span class="step-done-count">${currentIndex} geschafft</span> · letzter Schritt`;
-  return `
-    <div class="step-bar-wrap">
-      <div class="step-bar" role="progressbar" aria-label="Dein Fortschritt in diesem Thema"
-           aria-valuemin="0" aria-valuemax="100"
-           aria-valuenow="${percent}" aria-valuetext="Schritt ${currentIndex + 1} von ${total}">
-        <div class="step-bar-fill" style="width:${percent}%"></div>
-      </div>
-      <p class="step-path-summary">${summary}</p>
-    </div>`;
-}
-
 /* ============================================================
    Merksatz-Baustein (Lerndesign-Vorschlag, Stufe 1)
    Additiv: hebt den Vorlese-Knopf aus renderLesson() unverändert nach
    global (er nutzt dort nur seinen eigenen Parameter und escapeHtml,
    siehe Prüfung in docs/lerndesign-vorschlag.md), damit buildRememberBox()
-   ihn mitnutzen kann. renderLesson() behält seine eigene, lokale Kopie
-   für text/bullets/examples/warning/success vorerst unverändert – die
-   Zusammenführung ist ein späterer, eigener Schritt.
+   ihn mitnutzen kann. renderLesson() nutzt seit Paket V4 dieselbe
+   gemeinsame Funktion (Zusammenführung, lokale Kopie entfernt).
    ============================================================ */
 function blockRead(t) {
   return t
@@ -4246,7 +4204,7 @@ function renderLesson() {
 
   /* Die .progress-area bleibt aus: sie ist eine eigene Karte mit Meta-Zeile und
      kostet 77 px – mehr als die Punkte-Reihe, die sie ersetzen sollte. Der
-     schlanke Balken steckt stattdessen in buildStepPath (rund 44 px). */
+     schlanke Balken steckt stattdessen im Wegweiser (buildProgress, rund 44 px). */
   setProgressVisible(false);
   /* Die untere Leiste bleibt auf JEDEM Lernschritt stehen (Prüfbericht B2).
      Vorher wurde sie bei Lektionen mit Übung ausgeblendet – damit war sie auf
@@ -4266,11 +4224,6 @@ function renderLesson() {
   saveLastLesson();
   showNav(true, !hasPractice, currentStep === lessons.length - 1 ? "Fertig" : "Weiter");
 
-  /* Vorlese-Knopf je Block: Vorlesen als selbstbestimmtes Angebot an jeder
-     Kachel (§1 Selbstbestimmung, §3 Vorlesen als Wahl). Liest genau diesen Block. */
-  const blockRead = (t) => t
-    ? `<span class="card-read-button card-read-button--block" role="button" tabindex="0" data-read-card-text="${escapeHtml(t)}" aria-label="Diesen Teil vorlesen"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`
-    : "";
   const plain = (arr) => Array.isArray(arr)
     ? arr.map(i => (typeof i === "object" && i.text) ? i.text : i).join(" ")
     : "";
@@ -4545,31 +4498,6 @@ function continueAfterPractice() {
 /* ============================================================
    Abschlussseite
    ============================================================ */
-
-/* Fortschritts-Rückmeldung direkt nach dem Erfolg (Bandura: unmittelbares
-   Erfolgserlebnis). Bietet – falls noch nicht aktiv – das freiwillige
-   Merken des Lernstands genau in dem Moment an, in dem es Sinn ergibt. */
-function buildCompletionProgress() {
-  const done = countDoneTopics();
-  const saveOffer = !isProgressEnabled() ? `
-    <div class="progress-consent">
-      <p class="progress-consent-title">Soll ich mir merken, welche Themen du geschafft hast?</p>
-      <p class="progress-consent-note">Das wird nur auf diesem Gerät gespeichert. Ohne Namen. Du kannst es jederzeit löschen.</p>
-      <button type="button" class="utility-button" onclick="enableProgressInline(this)">Ja, Lernstand merken</button>
-    </div>` : "";
-  return `
-    ${buildGrandFinish()}
-    <div class="hero-progress-row" role="region" aria-label="Dein Lernfortschritt">
-      <div class="hero-progress-numbers">
-        <span class="hero-progress-count">${done}</span>
-        <span class="hero-progress-of">von ${topics.length} Themen geschafft</span>
-      </div>
-      <div class="hero-progress-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${topics.length}" aria-label="${done} von ${topics.length} Themen">
-        <div class="hero-progress-fill" style="width:${Math.round((done / topics.length) * 100)}%"></div>
-      </div>
-    </div>
-    ${saveOffer}`;
-}
 
 /* ------------------------------------------------------------
    Kurze Frage nach den Lektionen (vor der Abschluss-Seite)
