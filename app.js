@@ -4335,7 +4335,7 @@ function renderLesson() {
 
   content.innerHTML = `
     ${buildToolRow()}
-    ${buildStepPath(currentStep, lessons.length)}
+    ${buildWegweiser(`Du lernst: ${topic.title}. Das ist Schritt ${currentStep + 1} von ${lessons.length}.`, { index: currentStep, total: lessons.length })}
     ${moduleBadge}
     <article class="card lesson-card page-flip page-flip--${pageDirection}${isEinfachLesson ? " lesson-card--einfach" : ""}" style="${getTopicColorStyle(topic.id)}" data-readable="true">
       ${pictogram}
