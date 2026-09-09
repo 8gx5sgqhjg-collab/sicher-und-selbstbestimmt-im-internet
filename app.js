@@ -2300,13 +2300,13 @@ function renderStart() {
   content.innerHTML = `
     <section class="start-entry">
       <h2 class="language-choice-title">Womit möchtest du starten?</h2>
-      <p class="language-choice-intro">Du kannst gleich selbst wählen. Oder du beantwortest 3 kurze Fragen und bekommst einen Vorschlag.</p>
+      <p class="language-choice-intro">Du kannst gleich selbst wählen. Oder du beantwortest 2 kurze Fragen und bekommst einen Vorschlag.</p>
       <div class="start-entry-grid">
         <button type="button" class="entry-card" onclick="startLanguageQuiz()">
           <span class="entry-icon" aria-hidden="true">${getIconHtml("help")}</span>
           <span class="entry-text">
             <strong>Hilf mir, die passende Stufe zu finden</strong>
-            <span>3 kurze Fragen. Es gibt keine falsche Antwort.</span>
+            <span>2 kurze Fragen. Es gibt keine falsche Antwort.</span>
           </span>
         </button>
         <button type="button" class="entry-card" onclick="renderLanguageChoice()">
