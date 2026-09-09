@@ -321,11 +321,13 @@ function signLabel(profile) {
   return found ? found.n : "Bild";
 }
 
-/* Alle Einstellungs-Schlüssel, die pro Profil getrennt gespeichert werden.
-   Feste Namen (müssen zu LANGUAGE_KEY, FONT_SIZE_KEY, STORAGE_KEY,
-   LEARN_MODE_KEY, LEARN_MODE_SEEN_KEY passen) – bewusst als Strings, damit
-   die Deklarations-Reihenfolge im Modul keine Rolle spielt. */
-const PROFILE_BASE_KEYS = ["language-level", "font-size-step", "lernstand", "lern-weg", "lern-weg-gesehen", "vorwissen"];
+/* Alle Schlüssel, die pro Profil getrennt gespeichert werden.
+   Vollständige Liste – Profil-Löschung (resetProfile/deleteProfile) und
+   Auto-Migration (ensureProfiles) laufen darüber. Bewusst als Strings
+   (Reihenfolge egal), damit die Deklarations-Reihenfolge der KEY-Konstanten
+   im Modul keine Rolle spielt. Global bleiben nur profile-liste,
+   profil-aktiv und geraet-geteilt – sie stehen hier NICHT drin. */
+const PROFILE_BASE_KEYS = ["language-level", "font-size-step", "lernstand", "lern-weg", "lern-weg-gesehen", "vorwissen", "motion", "vorlesen-automatisch", "vorlesen-gefragt", "vorlese-tempo", "einrichtung-rest", "letzte-lektion", "menue-gesehen", "mengen-wahl", "mengen-zuletzt"];
 
 /* Schlüssel für das aktive Profil. Ohne aktives Profil: alter Schlüssel
    (Rückfall – so bricht nie etwas). */
