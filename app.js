@@ -1368,9 +1368,9 @@ const READ_CARD_SVG = `<svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true
 function cleanSpeechText(text) {
   return String(text || "")
     .replace(/\s+/g, " ")
-    .replace(/←/g, "")
-    .replace(/[✓✕✔]/g, "")     /* Haken/Kreuze werden sonst als Zeichen gesprochen */
-    .replace(/ℹ️|👋|📵|📖|🎉/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
+    .replace(/[←→➜]/g, "")
+    .replace(/[✓✕✔✅]/g, "")     /* Haken/Kreuze werden sonst als Zeichen gesprochen */
+    .replace(/ℹ️|👋|📵|📖|🎉|🧠/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
     .replace(/%/g, " Prozent")
     .trim();
 }
