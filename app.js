@@ -4119,6 +4119,20 @@ function buildRememberBox(titel, text, opts) {
     : "";
 }
 
+/* Stations-Etikett (Faden Merken → Prüfen → Handeln,
+   docs/gesamtlernprinzip-stationen.md §1). Bewusst klein: ein Wort und ein
+   Bild-Zeichen, kein Satz, keine Erklärung. Nur Etikett — die Erklärung
+   steht auf der Startseite („So lernst du."). §18.8: prüfen lassen. */
+function stationBadge(key) {
+  const map = {
+    merken:  { icon: "🧠", wort: "Merken" },
+    pruefen: { icon: "✅", wort: "Prüfen" },
+    handeln: { icon: "➜", wort: "Handeln" }
+  };
+  const e = map[key];
+  return e ? `<span class="station-badge"><span aria-hidden="true">${e.icon}</span>${e.wort}</span>` : "";
+}
+
 function renderLesson() {
   stopReading();
   const topic = getCurrentTopic();
@@ -4278,6 +4292,7 @@ function renderLesson() {
       ${examples}
       ${warning}
       ${success}
+      ${stationBadge("merken")}
       ${remember}
       ${practice}
     </article>
@@ -4379,6 +4394,7 @@ function renderPracticeFeedbackPage(index, correctIndex) {
             Das ist keine reine Umstellung, sondern eine kleine Verbesserung — die
             Frage "gibt es überhaupt einen Merksatz?" gehört in den Baustein, nicht
             an jede Aufrufstelle. */""}
+      ${stationBadge("merken")}
       ${isCorrect ? buildRememberBox("Wichtig", practice.remember, { vorlesen: false }) : ""}
       ${regelHinweis}
 
@@ -4616,6 +4632,24 @@ function bindClosingSelfCheck(topic) {
   });
 }
 
+/* Station 5 (P6): „Hilfe nochmal lesen" auf der Abschlussseite der drei
+   sensiblen Themen (hilfe, betrug, ki). Öffnet die erste Lektion des
+   Hilfe-Moduls („Hilfe" bei betrug/ki, „Unterstützung" bei hilfe) — der
+   Index wird aus den Daten gesucht, nicht fest eingetragen. Mechanik wie
+   die Themen-Seite (startTopicMode/resumeLastLesson): Ziel setzen, dann
+   renderLesson(). Die Einstiegsfrage wird übersprungen — das Thema ist
+   geschafft, die Person will nur nachlesen. */
+function openTopicHelpLesson(topicId) {
+  const topic = getTopicById(topicId);
+  if (!topic || !Array.isArray(topic.lessons)) return renderMenu();
+  const idx = topic.lessons.findIndex(l => l && (l.module === "Hilfe" || l.module === "Unterstützung"));
+  rememberTopicAmount(topic.id, "full");
+  currentTopicId = topic.id;
+  currentMode = "full";
+  currentStep = idx >= 0 ? idx : 0;
+  renderLesson();
+}
+
 function renderCompletionPage(topicId) {
   stopReading();
   const topic = getTopicById(topicId);
@@ -4661,8 +4695,9 @@ function renderCompletionPage(topicId) {
           ${buildGoalsDone(topic)}
 
           ${topic.transfer ? `
+          ${stationBadge("handeln")}
           <div class="access-box remember remember-box">
-            <h3>Eine Sache für heute</h3>
+            <h3>DEINE eine Sache für heute</h3>
             <p class="remember-text">${escapeHtml(topic.transfer)}</p>
           </div>` : ""}
 
@@ -4730,8 +4765,9 @@ function renderCompletionPage(topicId) {
         </ul>
 
         ${topic.transfer ? `
+        ${stationBadge("handeln")}
         <div class="access-box remember remember-box">
-          <h3>Eine Sache für heute</h3>
+          <h3>DEINE eine Sache für heute</h3>
           <p class="remember-text">${escapeHtml(topic.transfer)}</p>
         </div>` : ""}
 
@@ -4744,6 +4780,7 @@ function renderCompletionPage(topicId) {
           <p class="completion-more-title">Zu diesem Thema gibt es außerdem:</p>
           <button type="button" class="secondary-action" onclick="startQuiz('${escapeHtml(topic.id)}')">Quiz machen</button>
           <button type="button" class="secondary-action" onclick="renderMemoryCard('${escapeHtml(topic.id)}')">Merk-Karte ansehen</button>
+          ${["hilfe", "betrug", "ki"].includes(topic.id) ? `<button type="button" class="secondary-action" onclick="openTopicHelpLesson('${escapeHtml(topic.id)}')">Hilfe nochmal lesen</button>` : ""}
           <button type="button" class="ghost-action" onclick="renderCertificate('${escapeHtml(topic.id)}')">Urkunde ansehen</button>
           <button type="button" class="ghost-action" onclick="renderMyPath()">Mein Lernweg ansehen</button>
           <button type="button" class="ghost-action" onclick="renderMenu()">Zur Themenübersicht</button>
@@ -4957,6 +4994,7 @@ function renderQuizQuestion() {
            Satz, hier). Die Ueberschrift bleibt fuer Screenreader und die
            Gliederung erhalten, kostet aber keinen Platz mehr. -->
       <h2 class="sr-only">Quiz</h2>
+      ${stationBadge("pruefen")}
       ${questionPikto(q)}<p class="quiz-question">${escapeHtml(q.question || "")}</p>
       ${buildTaskHelpBox(taskHint(q, "quiz"), true)}
       <div class="answers">${answerHtml}</div>
@@ -5059,9 +5097,17 @@ function renderQuizResult() {
     ${buildToolRow()}
     <article class="card quiz-result-card" data-readable="true">
       <h2>Quiz fertig</h2>
+      ${stationBadge("pruefen")}
       <p>Du hast ${quizScore} von ${total} Fragen richtig beantwortet.</p>
       <p>Das sind ${percent} Prozent.</p>
       <p>Wichtig ist: Du hast geübt.</p>
+      ${(topic && Array.isArray(topic.helpQuestions) && topic.helpQuestions.length) ? `
+      <div class="selfcheck-box">
+        <h3>Prüfe dich selbst:</h3>
+        <ul class="selfcheck-list">
+          ${topic.helpQuestions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
+        </ul>
+      </div>` : ""}
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="renderCertificate('${escapeHtml(currentTopicId)}', ${quizScore}, ${total})">Urkunde ansehen</button>
         <button type="button" class="nav-button secondary" onclick="startQuiz('${escapeHtml(currentTopicId)}')">Quiz wiederholen</button>
@@ -5391,6 +5437,7 @@ function startTrainingInbox() {
   content.innerHTML = `
     ${buildToolRow()}
     <article class="card training-card" data-readable="true">
+      ${stationBadge("pruefen")}
       <div class="symbol-heading">
         <span class="access-box-symbol" aria-hidden="true">${getIconHtml("message")}</span>
         <h2>Trainings-Postfach</h2>
@@ -5883,6 +5930,7 @@ function startScenario(topicId) {
   content.innerHTML = `
     ${buildToolRow()}
     <article class="card scenario-card" style="${getTopicColorStyle(topic.id)}" data-readable="true">
+      ${stationBadge("pruefen")}
       <div class="symbol-heading">
         <span class="access-box-symbol" aria-hidden="true">${getIconHtml(topic.icon || "start")}</span>
         <h2>Übungs-Handy: ${escapeHtml(scn.titel || topic.title)}</h2>

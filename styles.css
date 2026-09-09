@@ -1443,6 +1443,26 @@ html.no-motion *::after {
 .intro-principle-step { display: inline-flex; align-items: center; gap: 6px; }
 .intro-principle-arrow { color: var(--ink-soft); font-weight: 400; }
 
+/* Stations-Etikett (Faden Merken → Prüfen → Handeln), siehe app.js stationBadge() */
+.station-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 4px 10px;
+  margin: 10px 0 6px;
+}
+
+/* Selbst-Prüffragen (helpQuestions) im Quiz-Ergebnis — Station 4 */
+.selfcheck-box { margin: 14px 0; text-align: left; }
+.selfcheck-box h3 { margin: 0 0 8px; }
+.selfcheck-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+
 /* Übersicht „Das kannst du hier machen" */
 .intro-offer {
   margin: 18px 0 8px;
