@@ -1795,6 +1795,53 @@ html.no-motion *::after {
 .step-path--small .step-dot { width: 20px; height: 20px; font-size: 0.72rem; border-width: 2px; }
 .step-path--small .step-dot.is-current { width: 26px; height: 26px; font-size: 0.85rem; box-shadow: 0 0 0 3px var(--accent-soft); }
 /* Schlanker Fortschrittsbalken statt bis zu 13 nummerierter Kreise. */
+/* Wegweiser-Karte (Paket V, §2.2): Ort-Satz und Fortschritt in einem
+   Block. Nur Design-Tokens – keine festen Farbwerte, damit Hell- und
+   Dunkelmodus aus demselben Code kommen. Der Farbfaden links erbt
+   --topic-color von .app (gesetzt in setPageTopicColor). */
+.wegweiser {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--topic-color, var(--accent));
+  border-radius: var(--radius-s);
+}
+
+.wegweiser-ort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 1.02rem;
+}
+
+.wegweiser .step-bar-wrap { margin: 0; }
+
+/* Solange eine Seite den Wegweiser zeigt, tritt #orientLine visuell
+   zurück – der Ort-Satz steht dann sichtbar IN der Karte. Die Zeile
+   bleibt im DOM, bleibt Live-Region und bleibt das erste Vorlese-
+   Element; sie wird nur unsichtbar (sr-only-Muster, bewusst KEINE
+   .is-hidden-Klasse, damit das Vorlesen sie weiter findet). Ihr
+   Hör-Knopf wird gleichzeitig nicht mehr tabbar – die Karte hat
+   denselben Knopf sichtbar und bedienbar. */
+.app:has(#content .wegweiser) #orientLine {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.app:has(#content .wegweiser) #orientLine .card-read-button {
+  visibility: hidden;
+}
+
 .step-bar-wrap { margin: 0 0 14px; }
 
 .step-bar {

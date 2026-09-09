@@ -4058,6 +4058,66 @@ function renderSelfAssessment() {
    Der Satz "X geschafft · noch Y Schritte" bleibt: er trägt die Erfolgs-
    Rückmeldung (§3 Engagement) und wird – anders als die Kreise – vorgelesen.
    "Schritt X von Y" steht bereits im Orientierungssatz darüber. */
+/* ------------------------------------------------------------
+   Einheitlicher Fortschritts-Baustein (Paket V, §4.5/§2.2)
+
+   buildProgress(done, total) ersetzt schrittweise die drei
+   Fortschritts-Bauarten (Schritt-Balken, Abschluss-Balken,
+   Quiz-Balken) durch EIN Muster: Balken plus Stand-Satz in Worten.
+   Wortlaut, Zahlen und aria-Werte entsprechen exakt buildStepPath –
+   wiederverwendet werden dessen CSS-Klassen (.step-bar-*), sodass
+   kein neues Balken-CSS nötig ist. Reine Funktion, kein DOM-Eingriff;
+   total < 2 ergibt "" (ein einzelner Schritt braucht keinen Balken).
+   ------------------------------------------------------------ */
+function buildProgress(done, total) {
+  if (!total || total < 2) return "";
+  const currentIndex = Math.max(0, Math.min(total - 1, done));
+  const remaining = total - currentIndex - 1;
+  const percent = Math.round(((currentIndex + 1) / total) * 100);
+  const summary = remaining > 0
+    ? `<span class="step-done-count">${currentIndex} geschafft</span> · noch ${remaining} ${remaining === 1 ? "Schritt" : "Schritte"}`
+    : `<span class="step-done-count">${currentIndex} geschafft</span> · letzter Schritt`;
+  return `
+    <div class="step-bar-wrap">
+      <div class="step-bar" role="progressbar" aria-label="Dein Fortschritt in diesem Thema"
+           aria-valuemin="0" aria-valuemax="100"
+           aria-valuenow="${percent}" aria-valuetext="Schritt ${currentIndex + 1} von ${total}">
+        <div class="step-bar-fill" style="width:${percent}%"></div>
+      </div>
+      <p class="step-path-summary">${summary}</p>
+    </div>`;
+}
+
+/* ------------------------------------------------------------
+   Wegweiser (Paket V, §2.2): Ort-Satz und Fortschritt in EINER Karte.
+
+   buildWegweiser(text, { index, total }) gibt die sichtbare Karte
+   zurück: oben der Ort-Satz mit Themen-Symbol und Hör-Knopf, darunter
+   buildProgress. Der Aufrufer ruft setOrientation(text) wie bisher auf –
+   #orientLine bleibt dadurch Live-Region, Farbfaden-Quelle und erstes
+   Vorlese-Element (kein Doppel-Aufruf, keine Doppel-Meldung).
+
+   Barrierefreiheit: Für Screenreader steht der Satz EINMAL im Zugriff
+   (die sichtbare Kopie trägt aria-hidden, #orientLine bleibt die
+   Quelle). Der Hör-Knopf liegt bewusst AUSSERHALB des aria-hidden-
+   Bereichs: fokussierbar, mit eigenem Label, gleicher Mechanik
+   (data-read-card-text) wie der Knopf in #orientLine.
+   ------------------------------------------------------------ */
+function buildWegweiser(text, opts) {
+  const o = opts || {};
+  let iconHtml = "";
+  if (typeof currentTopicId !== "undefined" && currentTopicId) {
+    const topic = getTopicById(currentTopicId);
+    if (topic && topic.icon) iconHtml = `<span class="orient-icon" aria-hidden="true">${getIconHtml(topic.icon)}</span>`;
+  }
+  const progressHtml = (typeof o.index === "number" && o.total) ? buildProgress(o.index, o.total) : "";
+  return `
+    <div class="wegweiser">
+      <div class="wegweiser-ort">${iconHtml}<span class="wegweiser-ort-text" aria-hidden="true">${escapeHtml(text)}</span><span class="card-read-button card-read-button--orient" role="button" tabindex="0" data-read-card-text="${escapeHtml(text)}" aria-label="Vorlesen, wo du gerade bist">${READ_CARD_SVG}</span></div>
+      ${progressHtml}
+    </div>`;
+}
+
 function buildStepPath(currentIndex, total) {
   if (!total || total < 2) return "";
   const remaining = total - currentIndex - 1;
