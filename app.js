@@ -974,11 +974,11 @@ const ROLE_FIGURES = {
   hilfe:      { file: "alex-tilda-hilfe.webp",      alt: "Alex zeigt dir, wo du Hilfe findest." },
   erfolg:     { file: "alex-tilda-erfolg.webp",     alt: "Alex und Tilda freuen sich mit dir. Gut gemacht." },
   nachdenken: { file: "alex-tilda-nachdenken.webp", alt: "Tilda überlegt. Was weißt du schon?" },
-  winken:         { file: "alex-tilda-winken.png",         alt: "Alex und Tilda winken dir zu. Hier beginnt alles." },
+  winken:         { file: "alex-tilda-winken.png",         alt: "Alex und Tilda lernen zusammen. Hier beginnt alles." },
   themen:         { file: "alex-tilda-themen.png",         alt: "Tilda zeigt auf die Themen. Such dir etwas aus." },
-  lernweg:        { file: "alex-tilda-lernweg.png",        alt: "Tilda gibt dir Daumen hoch. Das hast du geschafft." },
-  einstellungen:  { file: "alex-tilda-einstellungen.png",  alt: "Alex mit Werkzeug. Stell es dir passend ein." },
-  ruhig:          { file: "alex-tilda-ruhig.png",          alt: "Tilda bleibt ruhig. Das macht nichts." }
+  lernweg:        { file: "alex-tilda-lernweg.png",        alt: "Tilda hat ein Buch in der Hand. Das ist dein Lern-Weg." },
+  einstellungen:  { file: "alex-tilda-einstellungen.png",  alt: "Tilda zeigt auf die Schalter. Stell es dir passend ein." },
+  ruhig:          { file: "alex-tilda-ruhig.png",          alt: "Tilda denkt in Ruhe nach. Das macht nichts." }
 };
 
 function roleFigure(role, extraClass = "") {
