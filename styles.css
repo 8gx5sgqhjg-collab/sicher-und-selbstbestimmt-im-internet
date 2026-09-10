@@ -152,14 +152,26 @@ h1, h2, h3, h4 {
   line-height: 1.3;
   margin: 0 0 0.6em;
   overflow-wrap: break-word;
+  /* Umbruch auf gleich lange Zeilen verteilen, statt ein einzelnes Wort
+     allein in die letzte Zeile zu schicken. Fuer unsere langen deutschen
+     Ueberschriften ("Sicher und selbstbestimmt im Internet") ein spuerbar
+     ruhigeres Bild - reine Darstellung, ohne Folgen fuers Layout. */
+  text-wrap: balance;
 }
 
-h1 { font-size: 1.45rem; }
+/* h1 war mit 1.45rem KLEINER als h2 mit 1.5rem - die Rangfolge stimmte
+   nicht (§9: sinnvolle Ueberschriften-Hierarchie). Knapp darueber gesetzt
+   statt deutlich: der Seitentitel steht in der Kopfzeile und soll dort
+   nicht auf eine dritte Zeile wachsen. */
+h1 { font-size: 1.55rem; }
 h2 { font-size: 1.5rem; }
 h3 { font-size: 1.2rem; }
 h4 { font-size: 1.05rem; }
 
 p, li {
+  /* Verhindert Schusterjungen: kein einzelnes Wort mehr allein in der
+     letzten Zeile eines Absatzes. */
+  text-wrap: pretty;
   font-size: 1.06rem;
 }
 
@@ -317,6 +329,14 @@ button {
 .motion-toggle-button.motion-off::before {
   content: "\23F8\FE0E";
   margin-right: 6px;
+}
+
+/* ============================================================
+   Markierter Text in Marken-Farbe statt Browser-Blau.
+   ============================================================ */
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* Vom Nutzer gewählt: keine Bewegung (zusätzlich zur System-Einstellung) */
@@ -2404,7 +2424,11 @@ html.no-motion *::after {
 .card-read-button--block {
   margin-top: 10px;
   background: transparent;
-  opacity: .55;
+  /* Gemessen: bei .55 kommt das Symbol im Hellmodus auf 2,61:1 gegen die
+     Karte und reisst damit die 3:1, die WCAG 2.2 SC 1.4.11 fuer
+     Bedienelemente verlangt. Bei .7 sind es 3,69:1 hell und 5,10:1
+     dunkel - beide sicher darueber. */
+  opacity: .7;
   transition: opacity .18s;
 }
 @media (hover: hover) {
@@ -6199,4 +6223,96 @@ button.sz-runde:focus-visible { border-color: var(--accent); }
   margin: 10px 0 0;
   font-size: 0.98rem;
   color: var(--ink-soft);
+}
+
+
+/* ============================================================
+   NUTZER-EINSTELLUNGEN — bewusst ganz am Ende der Datei.
+   Diese Bloecke ueberschreiben Token- und Rahmen-Werte, die weiter
+   oben gesetzt werden (u. a. der Dark-Mode-:root-Block und die
+   Bedien-Zeile). Stuenden sie frueher, gaeben sie im Kaskaden-
+   Vergleich nach und blieben wirkungslos - genau das war beim
+   ersten Versuch der Fall.
+   ============================================================ */
+
+/* ============================================================
+   System-Einstellung "Hoher Kontrast"
+   Wer das eingestellt hat, sieht Feinheiten schlecht. Also: Text
+   dunkler bzw. heller, Raender kraeftiger, Bedienelemente klarer
+   abgegrenzt. Nur Token-Werte plus ein paar Rahmen - dadurch traegt
+   es automatisch durch die ganze Oberflaeche.
+   ============================================================ */
+@media (prefers-contrast: more) {
+  :root {
+    --ink-soft: #22334a;   /* statt #3d506a: ~8,9:1 auf --bg */
+    --line:     #5b7186;   /* Raender sichtbar statt angedeutet */
+    --accent:      #003f6e;
+    --accent-dark: #002845;
+  }
+
+  /* Bedienelemente bekommen eine klare Kante. */
+  .reading-button,
+  .utility-chip,
+  .action-chip,
+  .card-read-button,
+  .utility-button,
+  .nav-button {
+    border-color: var(--accent-dark);
+  }
+  .card-read-button { border-width: 2px; }
+
+  /* Leise Elemente duerfen hier nicht mehr leise sein. */
+  .card-read-button--block { opacity: 1; }
+  .link-action { text-decoration-thickness: 2px; }
+}
+
+@media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+  :root {
+    --ink-soft: #d3e6f2;
+    --line:     #6d8399;
+    --accent:      #a9d8f5;
+    --accent-dark: #c3e4fa;
+  }
+}
+
+/* ============================================================
+   Windows-Kontrastdesigns (forced-colors)
+   Das Betriebssystem streicht dort alle Hintergrund- und
+   Rahmenfarben und setzt eigene ein. Ohne Gegenmassnahme verlieren
+   Vorlese-Pille, Chips und Muenze ihre Form und verschwimmen mit
+   der Seite. Systemfarben (ButtonBorder, ButtonText, Highlight)
+   passen sich dem gewaehlten Design an - deshalb genau die.
+   ============================================================ */
+@media (forced-colors: active) {
+  .reading-button,
+  .utility-chip,
+  .action-chip,
+  .utility-button,
+  .card-read-button,
+  .nav-button,
+  .topic-card,
+  .primary-action,
+  .secondary-action {
+    /* 2px, weil die Vorlese-Pille selbst einen 2px-Rahmen fuehrt und
+       ein schmalerer hier nichts aendern wuerde. */
+    border: 2px solid ButtonBorder;
+  }
+
+  /* Die Icon-Muenze lebt nur von ihrer Flaeche - die faellt hier weg. */
+  .rb-coin {
+    border: 1px solid ButtonBorder;
+    border-radius: 50%;
+  }
+
+  /* Der aktive Vorlese-Zustand wird sonst nicht mehr unterscheidbar. */
+  .reading-button.is-active {
+    border-color: Highlight;
+    border-width: 2px;
+  }
+
+  /* Leise Knoepfe waeren hier unsichtbar oder unbemerkbar. */
+  .card-read-button--block { opacity: 1; }
+
+  /* Fokus muss auch hier eindeutig bleiben. */
+  :focus-visible { outline-color: Highlight; }
 }
