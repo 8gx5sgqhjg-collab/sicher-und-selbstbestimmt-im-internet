@@ -1843,9 +1843,7 @@ html.no-motion *::after {
    zurück – der Ort-Satz steht dann sichtbar IN der Karte. Die Zeile
    bleibt im DOM, bleibt Live-Region und bleibt das erste Vorlese-
    Element; sie wird nur unsichtbar (sr-only-Muster, bewusst KEINE
-   .is-hidden-Klasse, damit das Vorlesen sie weiter findet). Ihr
-   Hör-Knopf wird gleichzeitig nicht mehr tabbar – die Karte hat
-   denselben Knopf sichtbar und bedienbar. */
+   .is-hidden-Klasse, damit das Vorlesen sie weiter findet). */
 .app:has(#content .wegweiser) #orientLine {
   position: absolute;
   width: 1px;
@@ -1856,10 +1854,6 @@ html.no-motion *::after {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.app:has(#content .wegweiser) #orientLine .card-read-button {
-  visibility: hidden;
 }
 
 .step-bar-wrap { margin: 0 0 14px; }
@@ -2403,9 +2397,21 @@ html.no-motion *::after {
   height: 18px;
 }
 
+/* Block-Vorlese-Knöpfe: leise Feinwerkzeuge (Paket H). Trefffläche und
+   Größe bleiben unverändert (§9), nur die Optik tritt zurück. Mit Maus
+   erscheinen sie erst beim Überstreichen des Blocks, mit Tastatur
+   sofort voll sichtbar, auf Touch-Geräten dauerhaft sichtbar-leise. */
 .card-read-button--block {
   margin-top: 10px;
   background: transparent;
+  opacity: .55;
+  transition: opacity .18s;
+}
+@media (hover: hover) {
+  .card-read-button--block { opacity: 0; }
+  .ls-text-block:hover .card-read-button--block,
+  .ls-bullet-block:hover .card-read-button--block,
+  .access-box:hover .card-read-button--block { opacity: 1; }
 }
 .ls-text-block,
 .ls-bullet-block {
@@ -2423,6 +2429,7 @@ html.no-motion *::after {
 .card-read-button--block:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+  opacity: 1;
 }
 
 /* Sanftes „Blättern" beim Seitenwechsel: weiches Überblenden + kleine
@@ -2719,7 +2726,7 @@ html.no-motion *::after {
 .reading-button .rb-eq i:nth-child(3) { height: 9px; }
 .reading-button .rb-eq i:nth-child(4) { height: 16px; }
 
-.rb-stop { display: none; width: 11px; height: 11px; border-radius: 2px; background: currentColor; }
+.rb-stop { display: none; width: 11px; height: 11px; border-radius: 2px; background: currentColor; margin-left: 2px; }
 
 /* Aktiv: Pille gefuellt, Equalizer laeuft, Stopp-Quadrat sagt, was ein Druck tut. */
 .reading-button.is-active {
@@ -3202,6 +3209,66 @@ p.feedback-wrong {
   font-size: 1rem;
   font-weight: 700;
   color: var(--ink-soft);
+}
+
+/* Paket H: Zusatz-Angebote als Chip-Reihe, Navigation als Text-Links.
+   Wortlaute und onclick bleiben unverändert; die Links bleiben echte
+   Buttons (Tastatur/Fokus wie Standard), nur die Optik ist Link. */
+.action-chip-row {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 16px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: color .2s, background .2s, border-color .2s;
+}
+.action-chip:hover {
+  color: var(--ink);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.completion-links {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin-top: 6px;
+}
+
+.link-action {
+  background: none;
+  border: none;
+  padding: 8px 2px;
+  min-height: 44px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link-action:hover {
+  color: var(--ink);
+}
+
+/* Einfach-Weg: einzelner Chip in der schmalen Spalte linksbündig */
+.einfach-done-actions .action-chip {
+  align-self: flex-start;
 }
 
 /* ---- Einfach-Quiz ---- */
@@ -3807,12 +3874,6 @@ body.lesson-view .orient-line {
 
 .orient-text {
   flex: 1;
-}
-
-.card-read-button--orient {
-  flex: none;
-  min-width: 44px;
-  min-height: 44px;
 }
 
 .resume-lesson-wrap {

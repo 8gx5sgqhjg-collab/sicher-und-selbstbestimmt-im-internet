@@ -1077,7 +1077,9 @@ function setOrientation(text) {
     return;
   }
   /* Dreifache Kodierung desselben Signals (UDL): Farbe (Rand), Bild
-     (Themen-Symbol) und Satz. Dazu ein Hör-Knopf für Nicht-Leser. */
+     (Themen-Symbol) und Satz. Ein eigener Hör-Knopf existiert seit
+     Paket H nicht mehr: Die Vorlese-Pille liest den Ort-Satz zuerst
+     (siehe readStart / readCurrentPage, das #orientLine voranstellt). */
   let color = "";
   let iconHtml = "";
   if (typeof currentTopicId !== "undefined" && currentTopicId) {
@@ -1087,8 +1089,7 @@ function setOrientation(text) {
     const topic = getTopicById(currentTopicId);
     if (topic && topic.icon) iconHtml = `<span class="orient-icon" aria-hidden="true">${getIconHtml(topic.icon)}</span>`;
   }
-  orientLine.innerHTML = `${iconHtml}<span class="orient-text">${escapeHtml(text)}</span>` +
-    `<span class="card-read-button card-read-button--orient" role="button" tabindex="0" data-read-card-text="${escapeHtml(text)}" aria-label="Vorlesen, wo du gerade bist"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`;
+  orientLine.innerHTML = `${iconHtml}<span class="orient-text">${escapeHtml(text)}</span>`;
   orientLine.style.borderLeftColor = color;
   /* Dieselbe Farbe an Kopfzeile und Fortschritts-Balken. */
   setPageTopicColor(color ? currentTopicId : null);
@@ -4135,16 +4136,15 @@ function buildProgress(done, total, opts) {
    Wegweiser (Paket V, §2.2): Ort-Satz und Fortschritt in EINER Karte.
 
    buildWegweiser(text, { index, total }) gibt die sichtbare Karte
-   zurück: oben der Ort-Satz mit Themen-Symbol und Hör-Knopf, darunter
+   zurück: oben der Ort-Satz mit Themen-Symbol, darunter
    buildProgress. Der Aufrufer ruft setOrientation(text) wie bisher auf –
    #orientLine bleibt dadurch Live-Region, Farbfaden-Quelle und erstes
    Vorlese-Element (kein Doppel-Aufruf, keine Doppel-Meldung).
 
    Barrierefreiheit: Für Screenreader steht der Satz EINMAL im Zugriff
    (die sichtbare Kopie trägt aria-hidden, #orientLine bleibt die
-   Quelle). Der Hör-Knopf liegt bewusst AUSSERHALB des aria-hidden-
-   Bereichs: fokussierbar, mit eigenem Label, gleicher Mechanik
-   (data-read-card-text) wie der Knopf in #orientLine.
+   Quelle). Ein eigener Hör-Knopf existiert seit Paket H nicht mehr:
+   Die Vorlese-Pille liest den Ort-Satz zuerst.
    ------------------------------------------------------------ */
 function buildWegweiser(text, opts) {
   const o = opts || {};
@@ -4156,7 +4156,7 @@ function buildWegweiser(text, opts) {
   const progressHtml = (typeof o.index === "number" && o.total) ? buildProgress(o.index, o.total) : "";
   return `
     <div class="wegweiser">
-      <div class="wegweiser-ort">${iconHtml}<span class="wegweiser-ort-text" aria-hidden="true">${escapeHtml(text)}</span><span class="card-read-button card-read-button--orient" role="button" tabindex="0" data-read-card-text="${escapeHtml(text)}" aria-label="Vorlesen, wo du gerade bist">${READ_CARD_SVG}</span></div>
+      <div class="wegweiser-ort">${iconHtml}<span class="wegweiser-ort-text" aria-hidden="true">${escapeHtml(text)}</span></div>
       ${progressHtml}
     </div>`;
 }
@@ -4769,19 +4769,21 @@ function renderCompletionPage(topicId) {
             </button>
             ${nextActionHtml("einfach-done-btn").replace("primary-action", "secondary-action")}
             ${getQuizQuestions(topic).length
-              ? `<button type="button" class="secondary-action einfach-done-btn" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
+              ? `<button type="button" class="action-chip" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
                    Quiz machen
                  </button>`
               : ""}
-            <button type="button" class="ghost-action einfach-done-btn" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
-              Nochmal von vorne
-            </button>
-            <button type="button" class="ghost-action einfach-done-btn" onclick="renderMyPath()">
-              Mein Lernweg ansehen
-            </button>
-            <button type="button" class="ghost-action einfach-done-btn" onclick="renderMenu()">
-              Zur Themenübersicht
-            </button>
+            <div class="completion-links">
+              <button type="button" class="link-action" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
+                Nochmal von vorne
+              </button>
+              <button type="button" class="link-action" onclick="renderMyPath()">
+                Mein Lernweg ansehen
+              </button>
+              <button type="button" class="link-action" onclick="renderMenu()">
+                Zur Themenübersicht
+              </button>
+            </div>
           </div>
 
         </article>
@@ -4833,12 +4835,16 @@ function renderCompletionPage(topicId) {
         <div class="completion-actions">
           ${nextActionHtml()}
           <p class="completion-more-title">Zu diesem Thema gibt es außerdem:</p>
-          <button type="button" class="secondary-action" onclick="startQuiz('${escapeHtml(topic.id)}')">Quiz machen</button>
-          <button type="button" class="secondary-action" onclick="renderMemoryCard('${escapeHtml(topic.id)}')">Merk-Karte ansehen</button>
-          ${["hilfe", "betrug", "ki"].includes(topic.id) ? `<button type="button" class="secondary-action" onclick="openTopicHelpLesson('${escapeHtml(topic.id)}')">Hilfe nochmal lesen</button>` : ""}
-          <button type="button" class="ghost-action" onclick="renderCertificate('${escapeHtml(topic.id)}')">Urkunde ansehen</button>
-          <button type="button" class="ghost-action" onclick="renderMyPath()">Mein Lernweg ansehen</button>
-          <button type="button" class="ghost-action" onclick="renderMenu()">Zur Themenübersicht</button>
+          <div class="action-chip-row">
+            <button type="button" class="action-chip" onclick="startQuiz('${escapeHtml(topic.id)}')">Quiz machen</button>
+            <button type="button" class="action-chip" onclick="renderMemoryCard('${escapeHtml(topic.id)}')">Merk-Karte ansehen</button>
+            ${["hilfe", "betrug", "ki"].includes(topic.id) ? `<button type="button" class="action-chip" onclick="openTopicHelpLesson('${escapeHtml(topic.id)}')">Hilfe nochmal lesen</button>` : ""}
+          </div>
+          <div class="completion-links">
+            <button type="button" class="link-action" onclick="renderCertificate('${escapeHtml(topic.id)}')">Urkunde ansehen</button>
+            <button type="button" class="link-action" onclick="renderMyPath()">Mein Lernweg ansehen</button>
+            <button type="button" class="link-action" onclick="renderMenu()">Zur Themenübersicht</button>
+          </div>
         </div>
       </article>
     </section>
@@ -4999,12 +5005,14 @@ function renderEinfachQuizResult() {
         <button type="button" class="primary-action einfach-done-btn" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
           Quiz nochmal
         </button>
-        <button type="button" class="secondary-action einfach-done-btn" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
-          Lektionen nochmal
-        </button>
-        <button type="button" class="ghost-action einfach-done-btn" onclick="renderMenu()">
-          Zur Themenübersicht
-        </button>
+        <div class="completion-links">
+          <button type="button" class="link-action" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
+            Lektionen nochmal
+          </button>
+          <button type="button" class="link-action" onclick="renderMenu()">
+            Zur Themenübersicht
+          </button>
+        </div>
       </div>
     </article>
   `;
