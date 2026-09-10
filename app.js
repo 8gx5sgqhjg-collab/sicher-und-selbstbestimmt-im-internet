@@ -1338,7 +1338,10 @@ function setReadingActive(mode) {
     n.setAttribute("aria-pressed", on ? "true" : "false");
     /* Beschriftung mitschalten, damit der Knopf sagt, was er als Nächstes tut. */
     const label = n.querySelector(".rb-label");
-    if (label) label.textContent = on ? "Stopp" : "Vorlesen";
+    /* Paket G: Der aktive Zustand heisst "Liest vor" statt "Stopp".
+       Das Stopp-Quadrat rechts in der Pille sagt, was ein Druck bewirkt
+       (Medien-Konvention); die Schrift sagt, was gerade passiert. */
+    if (label) label.textContent = on ? "Liest vor" : "Vorlesen";
   }
   if (s) { s.classList.toggle("is-active", mode === "slow"); s.setAttribute("aria-pressed", mode === "slow" ? "true" : "false"); }
 }
@@ -1648,9 +1651,21 @@ function buildReadingToolbar() {
      vorgelesen wird. Vorher stand "Stopp" dauerhaft in Warn-Rot da, obwohl
      nichts lief – das widerspricht §10 ("Rot nur sparsam für Warnungen") und
      kostet auf jedem Schritt eine halbe Zeile. Funktion bleibt vollständig. */
+  /* Paket G: EINE laute Primaeraktion. Beide Symbole stehen immer im Markup,
+     das CSS blendet ueber .is-active um – so bleibt der Zustandswechsel eine
+     reine Darstellungssache und die Vorlese-Logik unberuehrt. Der Wrapper
+     .reading-toolbar MUSS bleiben: readCurrentPage() schliesst genau ihn vom
+     Vorlesen aus, sonst liest sich die Bedien-Zeile selbst mit vor. */
   return `
     <div class="reading-toolbar" aria-label="Vorlesen">
-      <button type="button" class="reading-button reading-button-normal" aria-pressed="false" onclick="toggleReading()"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="rb-label">Vorlesen</span></button>
+      <button type="button" class="reading-button reading-button-normal" aria-pressed="false" onclick="toggleReading()">
+        <span class="rb-coin" aria-hidden="true">
+          <svg class="rb-ico rb-ico-speak" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="rb-eq"><i></i><i></i><i></i><i></i></span>
+        </span>
+        <span class="rb-label">Vorlesen</span>
+        <span class="rb-stop" aria-hidden="true"></span>
+      </button>
       <p id="readingStatus" class="reading-status" aria-live="polite"></p>
     </div>
   `;
@@ -1744,11 +1759,19 @@ function closeCalmOverlay() {
    zweite. Das spart eine ganze Zeile, ohne etwas zu verstecken.
    §1 Pause-Funktion, §2 "Sprache jederzeit umstellbar". */
 function buildUtilityBar() {
+  /* Paket G: leise Sekundaeraktionen als Chip-Kapsel neben der Vorlese-Pille.
+     Sichtbar steht am Sprach-Chip nur der Stufenname; das Wort "Sprache:"
+     lebt im aria-label, damit der zugaengliche Name den sichtbaren Text
+     enthaelt (WCAG 2.2 SC 2.5.3 Label in Name). */
   return `
-    <div class="utility-bar" aria-label="Pause und Sprache">
-      <button type="button" class="utility-button pause-button" onclick="showPauseOverlay()">Pause machen</button>
-      <button type="button" class="utility-button language-switch-button" onclick="renderLanguageChoice()">
-        Sprache: ${LANGUAGE_LABEL[languageLevel]}
+    <div class="utility-bar" role="group" aria-label="Pause und Sprache">
+      <button type="button" class="utility-chip pause-button" onclick="showPauseOverlay()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>
+        <span>Pause</span>
+      </button>
+      <button type="button" class="utility-chip language-switch-button" onclick="renderLanguageChoice()" aria-label="Sprache: ${escapeHtml(LANGUAGE_LABEL[languageLevel])}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span>${escapeHtml(LANGUAGE_LABEL[languageLevel])}</span>
       </button>
     </div>
   `;

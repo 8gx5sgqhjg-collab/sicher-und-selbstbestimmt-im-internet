@@ -2644,41 +2644,150 @@ html.no-motion *::after {
 /* Eine Bedien-Zeile statt zweier gestapelter Karten: Vorlesen links,
    "Sprache und Pause" daneben. Spart auf jedem Bildschirm rund 90 px
    ueber dem Inhalt (§3 Cognitive Load: keine Wand vor dem Lernstoff). */
+/* ============================================================
+   Bedien-Zeile (Paket G): EINE Hierarchie auf jedem Screen.
+   Primaer = Vorlese-Pille (laut), Sekundaer = Chip-Gruppe (leise).
+   Design-System-Regel ab jetzt: Primaeraktionen als Pille mit
+   Icon-Muenze, Sekundaeraktionen als Chips in einer Kapsel.
+   WICHTIG: Die Optik haengt an den Bausteinen (.reading-button,
+   .utility-chip), NICHT an .tool-row. Grund: buildReadingToolbar()
+   wird 15x direkt aufgerufen, ohne Zeilen-Wrapper – haenge man das
+   Aussehen an .tool-row, staenden diese 15 Pillen unformatiert da.
+   .tool-row regelt nur noch die Anordnung der beiden Gruppen.
+   So sieht die Bedienung ueberall gleich aus (§3 Vorhersehbarkeit).
+   ============================================================ */
 .tool-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 14px;
 }
 
-/* Beide Teilleisten loesen sich in der gemeinsamen Zeile auf, damit ihre
-   Knoepfe als EIN Satz umbrechen. Sonst bliebe "Pause machen" an den breiten
-   Sprach-Knopf gekettet und die Leiste braeuchte drei Zeilen statt zwei. */
-.tool-row .reading-toolbar,
-.tool-row .utility-bar {
-  display: contents;
-}
+/* Die Vorlese-Leiste loest sich auf, damit die Pille selbst zum
+   Flex-Kind der Zeile wird. Die Chip-Leiste bleibt ein eigener
+   Container: nur so stossen ihre Chips zur Kapsel aneinander –
+   mit display:contents wuerde space-between sie auseinanderziehen. */
+.tool-row .reading-toolbar { display: contents; }
 
-.tool-row .reading-button {
+.tool-row .utility-bar { margin: 0; }
+
+/* — Vorlese-Pille — */
+.reading-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   flex: 0 0 auto;
   min-width: 0;
-  min-height: 58px;   /* gleiche Hoehe wie der Umschalter daneben, §9 */
+  min-height: 58px;                 /* §9 Zielgroesse */
+  padding: 7px 18px 7px 7px;
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);        /* hoechster Kontrast auf --accent-soft, hell wie dunkel */
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
 }
 
-.tool-row .reading-status:empty {
-  display: none;
+.reading-button:hover { border-color: var(--accent); }
+
+.rb-coin {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);          /* NICHT #fff: im Dark Mode ist --accent hell */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tool-row .reading-status {
-  flex-basis: 100%;
-  margin: 0;
+.rb-ico,
+.reading-button .rb-eq { width: 20px; height: 20px; }
+
+.reading-button .rb-eq { display: none; align-items: flex-end; gap: 2.5px; }
+
+/* Ruhehoehen bewusst ungleich: faellt die Animation weg (html.no-motion,
+   prefers-reduced-motion), steht trotzdem ein erkennbarer Equalizer da
+   und keine flache Linie. */
+.reading-button .rb-eq i { width: 3px; border-radius: 2px; background: currentColor; height: 7px; }
+.reading-button .rb-eq i:nth-child(2) { height: 14px; }
+.reading-button .rb-eq i:nth-child(3) { height: 9px; }
+.reading-button .rb-eq i:nth-child(4) { height: 16px; }
+
+.rb-stop { display: none; width: 11px; height: 11px; border-radius: 2px; background: currentColor; }
+
+/* Aktiv: Pille gefuellt, Equalizer laeuft, Stopp-Quadrat sagt, was ein Druck tut. */
+.reading-button.is-active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.reading-button.is-active .rb-ico-speak { display: none; }
+.reading-button.is-active .rb-eq { display: inline-flex; }
+.reading-button.is-active .rb-stop { display: inline-block; }
+.reading-button.is-active .rb-coin {
+  background: transparent;                                          /* Rueckfall, falls color-mix fehlt */
+  background: color-mix(in srgb, var(--on-accent) 20%, transparent); /* tokenbasiert, in beiden Modi richtig */
+  color: var(--on-accent);
+}
+.reading-button.is-active .rb-eq i { animation: rb-eqbar 1s ease-in-out infinite; }
+.reading-button.is-active .rb-eq i:nth-child(2) { animation-delay: .18s; }
+.reading-button.is-active .rb-eq i:nth-child(3) { animation-delay: .36s; }
+.reading-button.is-active .rb-eq i:nth-child(4) { animation-delay: .1s; }
+
+@keyframes rb-eqbar { 0%, 100% { height: 5px } 50% { height: 15px } }
+/* html.no-motion killt die Animation global (animation: none !important);
+   die ungleichen Ruhehoehen oben bleiben sichtbar. */
+
+/* — Chip-Gruppe (Pause, Sprache) — */
+.utility-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 14px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+}
+.utility-chip + .utility-chip { border-left: none; border-radius: 0; margin-left: -1.5px; }
+.utility-chip:first-child { border-radius: 99px 0 0 99px; }
+.utility-chip:last-child { border-radius: 0 99px 99px 0; }
+.utility-chip:only-child { border-radius: 99px; }
+.utility-chip svg { width: 17px; height: 17px; flex: none; }
+.utility-chip:hover { color: var(--ink); background: var(--accent-soft); }
+
+/* Fokus kommt aus der globalen :focus-visible-Regel (4 px --focus, §9) –
+   hier bewusst KEIN eigener Rahmen, sonst haette dieselbe Tastatur-
+   Bedienung auf dieser Zeile eine andere Farbe als auf jeder anderen. */
+
+/* Status-Text: verlaesst das Layout, bleibt fuer Screenreader da.
+   Die sichtbare Information steckt jetzt im Zustand der Pille. */
+.reading-status {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
+/* Chip-Kapsel (Paket G) – gilt auch fuer den einen Aufruf ausserhalb
+   einer .tool-row, damit die Gruppe nirgends auseinanderfaellt. */
 .utility-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
   margin-bottom: 14px;
 }
 
@@ -2741,62 +2850,11 @@ html.no-motion *::after {
   margin-bottom: 14px;
 }
 
-.reading-button {
-  /* Seit der Umstellung auf EINEN Umschalter darf der Knopf nicht mehr die
-     ganze Zeile fuellen: sonst ist er auf den Tab-Seiten 370 px breit und in
-     der Bedien-Zeile einer Lektion 131 px – derselbe Knopf in zwei Formen.
-     Gleiche Funktion, gleiches Aussehen auf jeder Seite (§3 Vorhersehbarkeit). */
-  flex: 0 0 auto;
-  min-width: 130px;
-  min-height: 58px;   /* §9: gleiche Hoehe wie alle anderen Bedienelemente */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 10px 16px;
-  font-size: 0.98rem;
-  font-weight: 700;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  cursor: pointer;
-}
-
-.reading-button:hover {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-/* Wird nicht mehr als eigener Knopf gerendert – die Regel bleibt, weil der
-   Vorlese-Umschalter im aktiven Zustand genau dieses Aussehen übernimmt. */
-.reading-button-stop,
-.reading-button-normal.is-active {
-  border-color: var(--bad);
-  background: var(--bad-bg);
-  color: var(--bad);
-}
-
-.reading-button-stop:hover,
-.reading-button-normal.is-active:hover {
-  background: var(--bad);
-  color: #ffffff;
-}
-
-/* Aktiver Knopf leuchtet grün: man sieht immer, was gerade läuft. */
-.reading-button.is-active,
-.reading-button.is-active:hover {
-  background: var(--good);
-  color: #ffffff;
-  border-color: var(--good);
-}
-
-/* Status-Text in eine eigene Zeile unter die Knöpfe. */
-.reading-toolbar .reading-status {
-  flex-basis: 100%;
-  width: 100%;
-  margin: 2px 0 0;
-}
+/* Die alte .reading-button-Basis (Pillen-Umriss, Warn-Rot fuer "Stopp",
+   Gruen fuer aktiv) ist mit Paket G entfallen: Aussehen und Zustand
+   liegen jetzt vollstaendig in den .tool-row-Regeln oben, und der Knopf
+   kommt nur dort vor. Die Regeln standen hier verwaist herum und haetten
+   dem neuen Aktiv-Zustand ihre Farben untergeschoben. */
 
 /* Mitlesen: der gerade vorgelesene Satz/Abschnitt wird mit einem klaren
    Rahmen markiert – KEIN Hintergrund, damit die Schrift voll lesbar bleibt
@@ -2808,11 +2866,7 @@ html.no-motion *::after {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-.reading-status {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--ink-soft);
-}
+/* .reading-status wird oben (Paket G) global auf sr-only gesetzt. */
 
 .reading-unavailable {
   margin: 0;
