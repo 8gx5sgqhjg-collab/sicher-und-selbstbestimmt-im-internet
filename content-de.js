@@ -1745,9 +1745,9 @@ function applySelfAssessmentVersions() {
 applySelfAssessmentVersions();
 
 /* ------------------------------------------------------------
-   Quiz vereinheitlichen: Einige Themen (KI, Fake News, Betrug,
-   Einkaufen) haben ihre Fragen unter `quizQuestions` statt `quiz`.
-   Damit „Quiz machen" und das große Quiz sie finden, hier angleichen.
+   Quiz vereinheitlichen: Heute haben ALLE 12 Themen ihre Fragen
+   unter `quizQuestions` (kein Thema mehr unter `quiz`). Der Alias
+   t.quiz = t.quizQuestions bleibt als Rückfall für künftige Themen.
    ------------------------------------------------------------ */
 function normalizeQuizzes() {
   if (typeof topics === "undefined" || !Array.isArray(topics)) return;

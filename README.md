@@ -21,12 +21,13 @@ Barrierearme Lernplattform in Einfacher Sprache – für Menschen mit Lern- und 
 
 ## Funktionen
 
-- Drei Lernwege pro Thema: Kurz lernen, Mehr lernen, Quiz
+- Jedes Thema in 3 Sprachstufen: Leichte Sprache, Einfache Sprache, Alltagssprache
+- Pro Thema: Kurz lernen oder Mehr lernen, dazu Übungen und Quiz
 - Druckbare Merk-Karten mit Regeln
 - Vorlesen (normal und langsam), optionale Töne
 - Einfach-Modus, Pause-Funktion, Symbol-Erklärung
-- Keine Speicherung: kein Name, kein Lernstand, keine Cookies
-- Direkte Links zu Themen, z. B. `index.html#datenschutz` oder `index.html#ki:quiz`
+- Speicherung: kein Name, keine Cookies, keine Server-Speicherung – Einstellungen und Lernstand (nur mit Einwilligung) liegen ausschließlich lokal im Browser
+- Direkte Links zu Themen, z. B. `index.html#thema-datenschutz` oder `index.html#thema-ki:quiz`
 
 ## Technik
 

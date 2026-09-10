@@ -321,11 +321,13 @@ function signLabel(profile) {
   return found ? found.n : "Bild";
 }
 
-/* Alle Einstellungs-Schlüssel, die pro Profil getrennt gespeichert werden.
-   Feste Namen (müssen zu LANGUAGE_KEY, FONT_SIZE_KEY, STORAGE_KEY,
-   LEARN_MODE_KEY, LEARN_MODE_SEEN_KEY passen) – bewusst als Strings, damit
-   die Deklarations-Reihenfolge im Modul keine Rolle spielt. */
-const PROFILE_BASE_KEYS = ["language-level", "font-size-step", "lernstand", "lern-weg", "lern-weg-gesehen", "vorwissen"];
+/* Alle Schlüssel, die pro Profil getrennt gespeichert werden.
+   Vollständige Liste – Profil-Löschung (resetProfile/deleteProfile) und
+   Auto-Migration (ensureProfiles) laufen darüber. Bewusst als Strings
+   (Reihenfolge egal), damit die Deklarations-Reihenfolge der KEY-Konstanten
+   im Modul keine Rolle spielt. Global bleiben nur profile-liste,
+   profil-aktiv und geraet-geteilt – sie stehen hier NICHT drin. */
+const PROFILE_BASE_KEYS = ["language-level", "font-size-step", "lernstand", "lern-weg", "lern-weg-gesehen", "vorwissen", "motion", "vorlesen-automatisch", "vorlesen-gefragt", "vorlese-tempo", "einrichtung-rest", "letzte-lektion", "menue-gesehen", "mengen-wahl", "mengen-zuletzt"];
 
 /* Schlüssel für das aktive Profil. Ohne aktives Profil: alter Schlüssel
    (Rückfall – so bricht nie etwas). */
@@ -960,11 +962,6 @@ function getIconHtml(iconName) {
   return `<img src="assets/icons/${escapeHtml(iconName)}.svg" alt="" aria-hidden="true">`;
 }
 
-function getIllustrationHtml(topic) {
-  if (!topic || !topic.illustration) return "";
-  return `<img class="topic-illustration" src="${escapeHtml(topic.illustration)}" alt="" aria-hidden="true">`;
-}
-
 /* ============================================================
    Alex-&-Tilda-Rollen-Figuren
    Feste Rollen mit beschreibenden Leichte-Sprache-Alt-Texten.
@@ -976,7 +973,12 @@ const ROLE_FIGURES = {
   achtung:    { file: "alex-tilda-achtung.webp",    alt: "Tilda hebt die Hand. Achtung: Hier ist Vorsicht wichtig." },
   hilfe:      { file: "alex-tilda-hilfe.webp",      alt: "Alex zeigt dir, wo du Hilfe findest." },
   erfolg:     { file: "alex-tilda-erfolg.webp",     alt: "Alex und Tilda freuen sich mit dir. Gut gemacht." },
-  nachdenken: { file: "alex-tilda-nachdenken.webp", alt: "Tilda überlegt. Was weißt du schon?" }
+  nachdenken: { file: "alex-tilda-nachdenken.webp", alt: "Tilda überlegt. Was weißt du schon?" },
+  winken:         { file: "alex-tilda-winken.png",         alt: "Alex und Tilda winken dir zu. Hier beginnt alles." },
+  themen:         { file: "alex-tilda-themen.png",         alt: "Tilda zeigt auf die Themen. Such dir etwas aus." },
+  lernweg:        { file: "alex-tilda-lernweg.png",        alt: "Tilda gibt dir Daumen hoch. Das hast du geschafft." },
+  einstellungen:  { file: "alex-tilda-einstellungen.png",  alt: "Alex mit Werkzeug. Stell es dir passend ein." },
+  ruhig:          { file: "alex-tilda-ruhig.png",          alt: "Tilda bleibt ruhig. Das macht nichts." }
 };
 
 function roleFigure(role, extraClass = "") {
@@ -1075,7 +1077,9 @@ function setOrientation(text) {
     return;
   }
   /* Dreifache Kodierung desselben Signals (UDL): Farbe (Rand), Bild
-     (Themen-Symbol) und Satz. Dazu ein Hör-Knopf für Nicht-Leser. */
+     (Themen-Symbol) und Satz. Ein eigener Hör-Knopf existiert seit
+     Paket H nicht mehr: Die Vorlese-Pille liest den Ort-Satz zuerst
+     (siehe readStart / readCurrentPage, das #orientLine voranstellt). */
   let color = "";
   let iconHtml = "";
   if (typeof currentTopicId !== "undefined" && currentTopicId) {
@@ -1085,8 +1089,7 @@ function setOrientation(text) {
     const topic = getTopicById(currentTopicId);
     if (topic && topic.icon) iconHtml = `<span class="orient-icon" aria-hidden="true">${getIconHtml(topic.icon)}</span>`;
   }
-  orientLine.innerHTML = `${iconHtml}<span class="orient-text">${escapeHtml(text)}</span>` +
-    `<span class="card-read-button card-read-button--orient" role="button" tabindex="0" data-read-card-text="${escapeHtml(text)}" aria-label="Vorlesen, wo du gerade bist"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`;
+  orientLine.innerHTML = `${iconHtml}<span class="orient-text">${escapeHtml(text)}</span>`;
   orientLine.style.borderLeftColor = color;
   /* Dieselbe Farbe an Kopfzeile und Fortschritts-Balken. */
   setPageTopicColor(color ? currentTopicId : null);
@@ -1336,7 +1339,10 @@ function setReadingActive(mode) {
     n.setAttribute("aria-pressed", on ? "true" : "false");
     /* Beschriftung mitschalten, damit der Knopf sagt, was er als Nächstes tut. */
     const label = n.querySelector(".rb-label");
-    if (label) label.textContent = on ? "Stopp" : "Vorlesen";
+    /* Paket G: Der aktive Zustand heisst "Liest vor" statt "Stopp".
+       Das Stopp-Quadrat rechts in der Pille sagt, was ein Druck bewirkt
+       (Medien-Konvention); die Schrift sagt, was gerade passiert. */
+    if (label) label.textContent = on ? "Liest vor" : "Vorlesen";
   }
   if (s) { s.classList.toggle("is-active", mode === "slow"); s.setAttribute("aria-pressed", mode === "slow" ? "true" : "false"); }
 }
@@ -1347,8 +1353,8 @@ function updateReadingStatus(text) {
 }
 
 /* Auswahl-Karten, die selbst <button> sind. Ihr Text muss trotzdem vorgelesen
-   werden – siehe readCurrentPage(). An EINER Stelle definiert, damit die drei
-   Nutzungen (Auswahl, Satztrennung, collectReadableText) nicht auseinanderlaufen. */
+   werden – siehe readCurrentPage(). An EINER Stelle definiert, damit die beiden
+   Nutzungen (Auswahl, Satztrennung) nicht auseinanderlaufen. */
 const KARTEN_SELEKTOR = ".topic-card, .action-card, .learn-mode-card";
 /* Handlungs-Knoepfe, die mitgelesen werden. Sie bestehen aus mehreren
    Teilen (<strong>Kurz</strong><span>Nur das Wichtigste.</span>) und muessen
@@ -1367,34 +1373,12 @@ const READ_CARD_SVG = `<svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true
 
 function cleanSpeechText(text) {
   return String(text || "")
-    .replace(/\s+/g, " ")
-    .replace(/←/g, "")
-    .replace(/[✓✕✔]/g, "")     /* Haken/Kreuze werden sonst als Zeichen gesprochen */
-    .replace(/ℹ️|👋|📵|📖|🎉/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
+    .replace(/[←→➜]/g, "")
+    .replace(/[✓✕✔✅]/g, "")     /* Haken/Kreuze werden sonst als Zeichen gesprochen */
+    .replace(/ℹ️|👋|📵|📖|🎉|🧠/g, "")   /* Bild-Zeichen in Knopf- und Titeltexten */
     .replace(/%/g, " Prozent")
+    .replace(/\s+/g, " ")
     .trim();
-}
-
-function collectReadableText() {
-  const root = document.querySelector("[data-readable='true']") || content;
-  if (!root) return "";
-
-  /* Hinweis: Diese Funktion wird derzeit nirgends aufgerufen – gelesen wird
-     ueber readCurrentPage(). Sie bleibt mit derselben Karten-Regel gepflegt,
-     damit sie bei spaeterer Nutzung nicht wieder Karten verschluckt. */
-  const KARTE = KARTEN_SELEKTOR;
-  const clone = root.cloneNode(true);
-  clone.querySelectorAll(
-    "button:not(.topic-card):not(.action-card):not(.learn-mode-card), footer, nav, .small-footer-notice, .nav, .progress-area, .reading-toolbar, .task-help-button, .support-help-button, .support-help-close, .card-read-button, img, svg"
-  ).forEach(node => node.remove());
-
-  const parts = [];
-  clone.querySelectorAll("h1, h2, h3, p, li, " + KARTE).forEach(node => {
-    if (!node.matches(KARTE) && node.closest(KARTE)) return;
-    const text = cleanSpeechText(node.textContent);
-    if (text) parts.push(text);
-  });
-  return parts.join(". ");
 }
 
 /* Liest die Seite Satz für Satz vor und hebt den aktuellen Satz hervor
@@ -1668,9 +1652,21 @@ function buildReadingToolbar() {
      vorgelesen wird. Vorher stand "Stopp" dauerhaft in Warn-Rot da, obwohl
      nichts lief – das widerspricht §10 ("Rot nur sparsam für Warnungen") und
      kostet auf jedem Schritt eine halbe Zeile. Funktion bleibt vollständig. */
+  /* Paket G: EINE laute Primaeraktion. Beide Symbole stehen immer im Markup,
+     das CSS blendet ueber .is-active um – so bleibt der Zustandswechsel eine
+     reine Darstellungssache und die Vorlese-Logik unberuehrt. Der Wrapper
+     .reading-toolbar MUSS bleiben: readCurrentPage() schliesst genau ihn vom
+     Vorlesen aus, sonst liest sich die Bedien-Zeile selbst mit vor. */
   return `
     <div class="reading-toolbar" aria-label="Vorlesen">
-      <button type="button" class="reading-button reading-button-normal" aria-pressed="false" onclick="toggleReading()"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="rb-label">Vorlesen</span></button>
+      <button type="button" class="reading-button reading-button-normal" aria-pressed="false" onclick="toggleReading()">
+        <span class="rb-coin" aria-hidden="true">
+          <svg class="rb-ico rb-ico-speak" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="rb-eq"><i></i><i></i><i></i><i></i></span>
+        </span>
+        <span class="rb-label">Vorlesen</span>
+        <span class="rb-stop" aria-hidden="true"></span>
+      </button>
       <p id="readingStatus" class="reading-status" aria-live="polite"></p>
     </div>
   `;
@@ -1764,11 +1760,19 @@ function closeCalmOverlay() {
    zweite. Das spart eine ganze Zeile, ohne etwas zu verstecken.
    §1 Pause-Funktion, §2 "Sprache jederzeit umstellbar". */
 function buildUtilityBar() {
+  /* Paket G: leise Sekundaeraktionen als Chip-Kapsel neben der Vorlese-Pille.
+     Sichtbar steht am Sprach-Chip nur der Stufenname; das Wort "Sprache:"
+     lebt im aria-label, damit der zugaengliche Name den sichtbaren Text
+     enthaelt (WCAG 2.2 SC 2.5.3 Label in Name). */
   return `
-    <div class="utility-bar" aria-label="Pause und Sprache">
-      <button type="button" class="utility-button pause-button" onclick="showPauseOverlay()">Pause machen</button>
-      <button type="button" class="utility-button language-switch-button" onclick="renderLanguageChoice()">
-        Sprache: ${LANGUAGE_LABEL[languageLevel]}
+    <div class="utility-bar" role="group" aria-label="Pause und Sprache">
+      <button type="button" class="utility-chip pause-button" onclick="showPauseOverlay()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>
+        <span>Pause</span>
+      </button>
+      <button type="button" class="utility-chip language-switch-button" onclick="renderLanguageChoice()" aria-label="Sprache: ${escapeHtml(LANGUAGE_LABEL[languageLevel])}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span>${escapeHtml(LANGUAGE_LABEL[languageLevel])}</span>
       </button>
     </div>
   `;
@@ -1807,13 +1811,13 @@ function renderLegalFooter() {
 
 function chooseLanguage(level) {
   setLanguageLevel(level);
-  /* Im Erststart geht es nach der Sprache direkt zur Menue-Einweisung.
+  /* Im Erststart geht es nach der Sprache direkt zu den Themen (F3).
      Vorwissen und Vorlesen werden nicht mehr vorab gefragt, sondern erst
      hinter dem ersten Thema (Pruefbericht B10) - dann kann die Person die
      Frage aus Erfahrung beantworten statt ins Blaue.
      Beim späteren Ändern zurück dorthin, wo die Person herkam:
      Einstellungen, das gerade offene Thema, sonst die Themenübersicht. */
-  if (onboarding) { onboarding = false; return renderMenuIntro(); }
+  if (onboarding) { onboarding = false; return renderMenu(); }
   if (activeTab === "einstellungen") return renderSettingsPage();
   if (currentTopicId && getTopicById(currentTopicId)) return renderTopicChoice(currentTopicId);
   renderMenu();
@@ -1871,7 +1875,7 @@ function chooseVorwissen(v) {
 function renderVorleseFrage() {
   if (pGet(AUTO_READ_GEFRAGT_KEY) === "1" || !supportsSpeech()) {
     if (setupWeiterZu) { const weiter = setupWeiterZu; setupWeiterZu = null; return weiter(); }
-    return renderMenuIntro();
+    return renderMenu();
   }
   pSet(AUTO_READ_GEFRAGT_KEY, "1");
   stopReading();
@@ -1907,7 +1911,7 @@ function renderVorleseFrage() {
 function chooseAutoRead(an) {
   setAutoRead(an);
   if (setupWeiterZu) { const weiter = setupWeiterZu; setupWeiterZu = null; return weiter(); }
-  renderMenuIntro();
+  renderMenu();
 }
 
 /* ---- Zwei Restfragen hinter dem ersten Thema (Pruefbericht B10) ----
@@ -1994,17 +1998,31 @@ function renderProfilePicker() {
   renderLegalFooter();
 }
 
-/* Erststart-Frage: eigenes oder geteiltes Gerät. */
-function renderDeviceQuestion() {
+/* Erststart-Frage: eigenes oder geteiltes Gerät (F2). */
+function renderDeviceQuestion(showSharedChoice = false) {
   stopReading();
   setProgressVisible(false);
   setBottomNavVisible(false);
-  setHeader("Sicher und selbstbestimmt im Internet", "Start", "Start", "Wer benutzt dieses Gerät?", 0);
+  setHeader("Sicher und selbstbestimmt im Internet", "Start", "Start", "Wer lernt heute?", 0);
   showNav(false, false);
+
+  const sharedBlock = showSharedChoice ? `
+      <div class="device-sign-choice" style="margin-top: 24px; text-align: center;">
+        <h3 class="profile-picker-title" style="font-size: 1.25rem; margin-bottom: 12px;">Such dir ein Zeichen aus:</h3>
+        <div class="sign-icon-grid">
+          ${SIGN_ICONS.map(ic => `
+            <button type="button" class="sign-pick${signDraft.icon === ic.key ? " is-active" : ""}" onclick="pickDeviceSignIcon('${ic.key}')" aria-label="${escapeHtml(ic.name)} wählen">
+              <span class="sign-pick-bubble"><svg viewBox="0 0 100 100" aria-hidden="true">${ic.svg.replace(/#fff/g, "#00528f")}</svg></span>
+              <span class="sign-pick-name">${escapeHtml(ic.name)}</span>
+            </button>`).join("")}
+        </div>
+        <button type="button" class="intro-start-button" onclick="finishSign(null)" style="margin-top: 16px;">Weiter</button>
+      </div>` : "";
+
   content.innerHTML = `
     ${buildReadingToolbar()}
     <section class="profile-new" data-readable="true">
-      <h2 class="profile-picker-title">Willkommen!</h2>
+      <h2 class="profile-picker-title">Wer lernt heute?</h2>
       <p class="profile-picker-intro">Eine Frage zum Anfang: Benutzt du dieses Gerät allein? Oder benutzen es mehrere Personen?</p>
       <div class="device-grid">
         <button type="button" class="device-card" onclick="chooseDevice(false)">
@@ -2012,28 +2030,48 @@ function renderDeviceQuestion() {
           <strong>Nur ich</strong>
           <span>Mein eigenes Handy oder Tablet.</span>
         </button>
-        <button type="button" class="device-card" onclick="chooseDevice(true)">
+        <button type="button" class="device-card${showSharedChoice ? " is-active" : ""}" onclick="chooseDevice(true)">
           <span class="device-icon" aria-hidden="true">👥</span>
           <strong>Mehrere Personen</strong>
           <span>Ein Gerät, das wir uns teilen.</span>
         </button>
       </div>
+      ${sharedBlock}
     </section>
   `;
   focusContent();
   renderLegalFooter();
 }
 
+function pickDeviceSignIcon(key) {
+  const n = profiles.length;
+  signDraft = {
+    icon: key,
+    color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
+    number: n % 11
+  };
+  renderDeviceQuestion(true);
+}
+
 function chooseDevice(shared) {
   setDeviceShared(shared);
-  signDraft = { icon: null, color: null, number: null };
-  if (shared) return renderBuildSign(0, null);
+  const n = profiles.length;
+  if (shared) {
+    if (!signDraft.icon) {
+      signDraft = {
+        icon: SIGN_ICONS[n % SIGN_ICONS.length].key,
+        color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
+        number: n % 11
+      };
+    }
+    renderDeviceQuestion(true);
+    return;
+  }
   /* Eigenes Geraet: Das Zeichen dient nur dazu, mehrere Personen auf einem
      geteilten Geraet auseinanderzuhalten. Wer gerade „Nur ich" geantwortet
      hat, brauchte trotzdem drei Bildschirme mit zusammen 34 Auswahlfeldern
      (Pruefbericht B10). Jetzt vergibt die App das Zeichen selbst; unter
      Einstellungen laesst es sich jederzeit aendern. */
-  const n = profiles.length;
   signDraft = {
     icon: SIGN_ICONS[n % SIGN_ICONS.length].key,
     color: SIGN_COLORS[n % SIGN_COLORS.length].hex,
@@ -2300,13 +2338,13 @@ function renderStart() {
   content.innerHTML = `
     <section class="start-entry">
       <h2 class="language-choice-title">Womit möchtest du starten?</h2>
-      <p class="language-choice-intro">Du kannst gleich selbst wählen. Oder du beantwortest 3 kurze Fragen und bekommst einen Vorschlag.</p>
+      <p class="language-choice-intro">Du kannst gleich selbst wählen. Oder du beantwortest 2 kurze Fragen und bekommst einen Vorschlag.</p>
       <div class="start-entry-grid">
         <button type="button" class="entry-card" onclick="startLanguageQuiz()">
           <span class="entry-icon" aria-hidden="true">${getIconHtml("help")}</span>
           <span class="entry-text">
             <strong>Hilf mir, die passende Stufe zu finden</strong>
-            <span>3 kurze Fragen. Es gibt keine falsche Antwort.</span>
+            <span>2 kurze Fragen. Es gibt keine falsche Antwort.</span>
           </span>
         </button>
         <button type="button" class="entry-card" onclick="renderLanguageChoice()">
@@ -2578,7 +2616,7 @@ function answerDailyQuestion(index) {
   announce(feedback);
 }
 
-/* Menü-Erklärung als wiederverwendbarer Baustein (Einweisung + Hilfe) */
+/* Menü-Erklärung als wiederverwendbarer Baustein (dauerhaft in Hilfe) */
 function buildMenuExplainList() {
   return `
       <ul class="intro-offer-list">
@@ -2590,33 +2628,9 @@ function buildMenuExplainList() {
       </ul>`;
 }
 
-/* Eigener Einweisungs-Schritt: EIN Konzept (das Menü) auf EINEM Bildschirm.
-   Wird genau einmal gezeigt, danach steht die Erklärung dauerhaft in Hilfe. */
+/* Menü-Einweisungs-Zustand (F3): Chip beim ersten Themen-Besuch, Erklärungen dauerhaft in der Hilfe */
 const MENU_INTRO_KEY = "menue-gesehen";
 function menuIntroSeen() { return pGet(MENU_INTRO_KEY) === "1"; }
-function renderMenuIntro() {
-  if (menuIntroSeen()) return renderMenu();
-  pSet(MENU_INTRO_KEY, "1");
-  stopReading();
-  setProgressVisible(false);
-  setBottomNavVisible(false);
-  setHeader("Sicher und selbstbestimmt im Internet", "Das Menü", "Einweisung", "So findest du dich zurecht", 0);
-  setActiveTab("start");
-  setOrientation("Du bist bei der Einweisung. Gleich geht es zu den Themen.");
-  showNav(false, false);
-  content.innerHTML = `
-    ${buildReadingToolbar()}
-    <section class="intro-page" data-readable="true">
-      <div class="intro-offer">
-        <h3>Unten ist das Menü. Es ist immer da.</h3>
-        ${buildMenuExplainList()}
-      </div>
-      <button type="button" class="intro-start-button" onclick="renderMenu()">Alles klar. Zu den Themen.</button>
-    </section>
-  `;
-  focusContent();
-  renderLegalFooter();
-}
 
 function renderIntro() {
   stopReading();
@@ -2662,12 +2676,14 @@ function renderIntro() {
            Der Satz "In kurzen Schritten. Mit Bildern und zum Vorlesen."
            entfaellt: er steht inhaltlich in der Liste weiter unten. -->
       <div class="intro-welcome">
-        <img class="intro-welcome-figure" src="assets/illustrations/alex-und-tilda.svg" alt="" aria-hidden="true">
+        ${roleFigure("winken", "intro-welcome-figure")}
         <div class="intro-welcome-text">
           <h2>Willkommen!</h2>
           <p>Alex und Tilda begleiten dich. Du lernst, sicher und selbstbestimmt im Internet zu sein.</p>
         </div>
       </div>
+
+      <p class="intro-principle-plain"><strong>So lernst du:</strong> <span aria-hidden="true">🧠</span> Merken <span aria-hidden="true">→</span> <span aria-hidden="true">✅</span> Prüfen <span aria-hidden="true">→</span> <span aria-hidden="true">➜</span> Handeln</p>
 
       ${isReturning ? `
       <button type="button" class="intro-start-button" onclick="renderMenu()">Zu den Themen</button>
@@ -2683,15 +2699,17 @@ function renderIntro() {
       ${resumeCard}
 
       ${isReturning ? "" : `
-      <div class="intro-offer">
-        <h3>Das kannst du hier machen:</h3>
-        <ul class="intro-offer-list">
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("start")}</span><span>Du lernst über 12 Themen. Zum Beispiel: WhatsApp, Betrug und KI.</span></li>
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("message")}</span><span>Du kannst dir alles vorlesen lassen.</span></li>
-          <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("help")}</span><span>Du lernst allein. Oder mit einer Begleit-Person.</span></li>
-        </ul>
-      </div>
-      <p class="intro-meta">12 Themen &nbsp;·&nbsp; 3 Sprachstufen &nbsp;·&nbsp; kostenlos &nbsp;·&nbsp; kein Name nötig</p>
+      <details class="intro-more"><summary>Mehr über dieses Angebot</summary>
+        <div class="intro-offer">
+          <h3>Das kannst du hier machen:</h3>
+          <ul class="intro-offer-list">
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("start")}</span><span>Du lernst über 12 Themen. Zum Beispiel: WhatsApp, Betrug und KI.</span></li>
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("message")}</span><span>Du kannst dir alles vorlesen lassen.</span></li>
+            <li><span class="intro-offer-icon" aria-hidden="true">${getIconHtml("help")}</span><span>Du lernst allein. Oder mit einer Begleit-Person.</span></li>
+          </ul>
+        </div>
+        <p class="intro-meta">12 Themen &nbsp;·&nbsp; 3 Sprachstufen &nbsp;·&nbsp; kostenlos &nbsp;·&nbsp; kein Name nötig</p>
+      </details>
       `}
     </section>
   `;
@@ -2705,7 +2723,7 @@ function renderIntro() {
 function introQuickStart() {
   setLanguageLevel("leicht");
   pSet(VORWISSEN_KEY, "neu");
-  renderMenuIntro();
+  renderMenu();
 }
 
 function introStart() {
@@ -2792,6 +2810,11 @@ function renderMenu() {
   quizScore = 0;
   quizAnsweredCorrect = new Set();
 
+  const ersterBesuch = !menuIntroSeen();
+  if (ersterBesuch) {
+    pSet(MENU_INTRO_KEY, "1");
+  }
+
   setProgressVisible(false);
   setBottomNavVisible(false);
   setHeader("Sicher und selbstbestimmt im Internet", "Thema auswählen", "Themenübersicht", "Wähle ein Thema", 0);
@@ -2802,13 +2825,15 @@ function renderMenu() {
 
   const nextSuggestion = getNextTopicSuggestion();
   const anyTopicDone = countDoneTopics() > 0;
-  const cardFor = (topic) => {
+  const cardFor = (topic, isFirstCardOfFirstGroup) => {
     const done = isTopicDone(topic.id);
-    const suggested = !done && nextSuggestion && topic.id === nextSuggestion.id;
+    const showFirstBadge = ersterBesuch && isFirstCardOfFirstGroup;
+    const showNextBadge = !ersterBesuch && anyTopicDone && nextSuggestion && topic.id === nextSuggestion.id && !done;
     return `
     <div class="card-read-pair card-read-pair--topic">
       <button type="button" class="topic-card topic-${escapeHtml(topic.id)}${done ? " topic-card--done" : ""}" style="${getTopicColorStyle(topic.id)}" onclick="renderTopicChoice('${escapeHtml(topic.id)}')">
-      ${suggested ? `<span class="topic-start-badge">${anyTopicDone ? "Dein nächstes Thema" : "Starte hier"}</span>` : ""}
+      ${showFirstBadge ? `<span class="topic-start-badge topic-start-badge--first">Fang hier an</span>` : ""}
+      ${showNextBadge ? `<span class="topic-start-badge">Dein nächstes Thema</span>` : ""}
       ${done ? `<span class="topic-done-corner" aria-label="Geschafft" title="Geschafft">✓</span>` : ""}
       <span class="topic-icon" aria-hidden="true">${getIconHtml(topic.icon || "start")}</span>
       <span class="topic-title">${escapeHtml(topic.title)}</span>
@@ -2824,19 +2849,19 @@ function renderMenu() {
   /* Gruppen aufbauen; Themen ohne Gruppe landen sicherheitshalber am Ende */
   const grouped = new Set(TOPIC_GROUPS.flatMap(g => g.ids));
   const rest = topics.filter(t => !grouped.has(t.id));
-  const groupSections = TOPIC_GROUPS.map(g => {
+  const groupSections = TOPIC_GROUPS.map((g, gIdx) => {
     const groupTopics = g.ids.map(id => topics.find(t => t.id === id)).filter(Boolean);
     if (!groupTopics.length) return "";
     return `
       <section class="topic-group" aria-label="${escapeHtml(g.title)}">
         <h3 class="topic-grid-title">${escapeHtml(g.title)}</h3>
         <p class="topic-grid-hint">${escapeHtml(g.hint)}</p>
-        <div class="topic-grid">${groupTopics.map(cardFor).join("")}</div>
+        <div class="topic-grid">${groupTopics.map((t, tIdx) => cardFor(t, gIdx === 0 && tIdx === 0)).join("")}</div>
       </section>`;
   }).join("") + (rest.length ? `
       <section class="topic-group" aria-label="Weitere Themen">
         <h3 class="topic-grid-title">Weitere Themen</h3>
-        <div class="topic-grid">${rest.map(cardFor).join("")}</div>
+        <div class="topic-grid">${rest.map(t => cardFor(t, false)).join("")}</div>
       </section>` : "");
 
   /* Lernweg-Auswahl: selbstbestimmt, freiwillig, jederzeit änderbar. */
@@ -2894,7 +2919,9 @@ function renderMenu() {
       ${buildResumeLessonChip()}
       <h2 class="topic-grid-title">Wähle ein Thema</h2>
       <p class="topic-grid-hint">Tippe auf ein Thema. Dann geht es los.</p>
+      ${roleFigure("themen")}
       ${groupSections}
+      ${ersterBesuch ? `<div class="menu-hint-chip">Das Menü unten ist immer da.</div>` : ""}
     </section>
   `;
   focusContent();
@@ -3062,6 +3089,7 @@ function renderMyPath() {
     <section class="start-page">
       ${buildReadingToolbar()}
       <h2 class="topic-grid-title">Mein Lernweg</h2>
+      ${roleFigure("lernweg")}
       ${hierBistDu}
       ${buildGrandFinish()}
       <section class="path-block" aria-label="Das hast du geschafft">
@@ -3302,8 +3330,8 @@ function renderHelpPage() {
         <p><a class="setting-big-button pruefheft-link" href="pruefheft.html">Zum Prüf-Heft</a></p>
       </div>
 
-      <div class="intro-offer" role="region" aria-label="So findest du dich zurecht">
-        <h3>So findest du dich zurecht: das Menü unten</h3>
+      <div class="intro-offer" role="region" aria-label="Das Menü">
+        <h3>Das Menü ${sectionReadChip("Das Menü")}</h3>
         ${buildMenuExplainList()}
       </div>
     </section>
@@ -3348,6 +3376,7 @@ function renderSettingsPage() {
     <section class="start-page" data-readable="true">
       ${buildReadingToolbar()}
       <h2 class="topic-grid-title">Einstellungen</h2>
+      ${roleFigure("einstellungen")}
       <p class="topic-grid-hint">Hier kannst du vieles einstellen. So passt die Seite gut zu dir.</p>
       ${buildResumeLessonChip()}
 
@@ -4045,8 +4074,48 @@ function renderSelfAssessment() {
    Der Satz "X geschafft · noch Y Schritte" bleibt: er trägt die Erfolgs-
    Rückmeldung (§3 Engagement) und wird – anders als die Kreise – vorgelesen.
    "Schritt X von Y" steht bereits im Orientierungssatz darüber. */
-function buildStepPath(currentIndex, total) {
+/* ------------------------------------------------------------
+   Einheitlicher Fortschritts-Baustein (Paket V, §4.5/§2.2)
+
+   buildProgress(done, total) ersetzt schrittweise die drei
+   Fortschritts-Bauarten (Schritt-Balken, Abschluss-Balken,
+   Quiz-Balken) durch EIN Muster: Balken plus Stand-Satz in Worten.
+   Wortlaut, Zahlen und aria-Werte entsprechen exakt dem bisherigen
+   Schritt-Balken (bis V3 buildStepPath, in V4 entfernt) –
+   wiederverwendet werden dessen CSS-Klassen (.step-bar-*), sodass
+   kein neues Balken-CSS nötig ist. Reine Funktion, kein DOM-Eingriff;
+   total < 2 ergibt "" (ein einzelner Schritt braucht keinen Balken).
+   ------------------------------------------------------------ */
+function buildProgress(done, total, opts) {
+  /* Abschluss-Variante (Paket V3): „X von 12 Themen" für die
+     Abschluss-Seite – GrandFinish, Themen-Balken und Speicher-Angebot.
+     Exakt das bisherige buildCompletionProgress-Muster, nur mit
+     übergebenen Zahlen statt fest verdrahteten. */
+  /* Fortschritts-Rückmeldung direkt nach dem Erfolg (Bandura: unmittelbares
+     Erfolgserlebnis). Bietet – falls noch nicht aktiv – das freiwillige
+     Merken des Lernstands genau in dem Moment an, in dem es Sinn ergibt. */
+  if (opts && opts.complete) {
+    const saveOffer = !isProgressEnabled() ? `
+    <div class="progress-consent">
+      <p class="progress-consent-title">Soll ich mir merken, welche Themen du geschafft hast?</p>
+      <p class="progress-consent-note">Das wird nur auf diesem Gerät gespeichert. Ohne Namen. Du kannst es jederzeit löschen.</p>
+      <button type="button" class="utility-button" onclick="enableProgressInline(this)">Ja, Lernstand merken</button>
+    </div>` : "";
+    return `
+    ${buildGrandFinish()}
+    <div class="hero-progress-row" role="region" aria-label="Dein Lernfortschritt">
+      <div class="hero-progress-numbers">
+        <span class="hero-progress-count">${done}</span>
+        <span class="hero-progress-of">von ${total} Themen geschafft</span>
+      </div>
+      <div class="hero-progress-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${total}" aria-label="${done} von ${total} Themen">
+        <div class="hero-progress-fill" style="width:${Math.round((done / total) * 100)}%"></div>
+      </div>
+    </div>
+    ${saveOffer}`;
+  }
   if (!total || total < 2) return "";
+  const currentIndex = Math.max(0, Math.min(total - 1, done));
   const remaining = total - currentIndex - 1;
   const percent = Math.round(((currentIndex + 1) / total) * 100);
   const summary = remaining > 0
@@ -4063,14 +4132,42 @@ function buildStepPath(currentIndex, total) {
     </div>`;
 }
 
+/* ------------------------------------------------------------
+   Wegweiser (Paket V, §2.2): Ort-Satz und Fortschritt in EINER Karte.
+
+   buildWegweiser(text, { index, total }) gibt die sichtbare Karte
+   zurück: oben der Ort-Satz mit Themen-Symbol, darunter
+   buildProgress. Der Aufrufer ruft setOrientation(text) wie bisher auf –
+   #orientLine bleibt dadurch Live-Region, Farbfaden-Quelle und erstes
+   Vorlese-Element (kein Doppel-Aufruf, keine Doppel-Meldung).
+
+   Barrierefreiheit: Für Screenreader steht der Satz EINMAL im Zugriff
+   (die sichtbare Kopie trägt aria-hidden, #orientLine bleibt die
+   Quelle). Ein eigener Hör-Knopf existiert seit Paket H nicht mehr:
+   Die Vorlese-Pille liest den Ort-Satz zuerst.
+   ------------------------------------------------------------ */
+function buildWegweiser(text, opts) {
+  const o = opts || {};
+  let iconHtml = "";
+  if (typeof currentTopicId !== "undefined" && currentTopicId) {
+    const topic = getTopicById(currentTopicId);
+    if (topic && topic.icon) iconHtml = `<span class="orient-icon" aria-hidden="true">${getIconHtml(topic.icon)}</span>`;
+  }
+  const progressHtml = (typeof o.index === "number" && o.total) ? buildProgress(o.index, o.total) : "";
+  return `
+    <div class="wegweiser">
+      <div class="wegweiser-ort">${iconHtml}<span class="wegweiser-ort-text" aria-hidden="true">${escapeHtml(text)}</span></div>
+      ${progressHtml}
+    </div>`;
+}
+
 /* ============================================================
    Merksatz-Baustein (Lerndesign-Vorschlag, Stufe 1)
    Additiv: hebt den Vorlese-Knopf aus renderLesson() unverändert nach
    global (er nutzt dort nur seinen eigenen Parameter und escapeHtml,
    siehe Prüfung in docs/lerndesign-vorschlag.md), damit buildRememberBox()
-   ihn mitnutzen kann. renderLesson() behält seine eigene, lokale Kopie
-   für text/bullets/examples/warning/success vorerst unverändert – die
-   Zusammenführung ist ein späterer, eigener Schritt.
+   ihn mitnutzen kann. renderLesson() nutzt seit Paket V4 dieselbe
+   gemeinsame Funktion (Zusammenführung, lokale Kopie entfernt).
    ============================================================ */
 function blockRead(t) {
   return t
@@ -4095,17 +4192,28 @@ function blockRead(t) {
      Rückmeldungen zum Spielstand, keine Merksätze.
 
    opts.vorlesen (Standard true): steuert den Block-Vorlese-Knopf.
-   Auf false setzen an Stellen, die heute KEINEN eigenen Knopf haben — dort
-   wird der Kasten nur über das seitenweite Vorlesen mitgelesen. So bleibt
-   die Umstellung verhaltensneutral, statt nebenbei 5 neue Knöpfe
-   einzuführen. Vorlesen überall anzubieten ist eine eigene Entscheidung
-   (§3 Vorlesen als Angebot) und gehört in einen eigenen Schritt. */
+   Seit Stufe 4b (September 2026) haben ALLE Merksatz-Kästen den Knopf.
+   Die Option bleibt für künftige Ausnahmen erhalten. */
 function buildRememberBox(titel, text, opts) {
   opts = opts || {};
   const vorlesen = opts.vorlesen !== false;
   return text
     ? `<div class="access-box remember remember-box"><h3>${escapeHtml(titel)}</h3><p class="remember-text">${escapeHtml(text)}</p>${vorlesen ? blockRead(titel + ". " + text) : ""}</div>`
     : "";
+}
+
+/* Stations-Etikett (Faden Merken → Prüfen → Handeln,
+   docs/gesamtlernprinzip-stationen.md §1). Bewusst klein: ein Wort und ein
+   Bild-Zeichen, kein Satz, keine Erklärung. Nur Etikett — die Erklärung
+   steht auf der Startseite („So lernst du."). §18.8: prüfen lassen. */
+function stationBadge(key) {
+  const map = {
+    merken:  { icon: "🧠", wort: "Merken" },
+    pruefen: { icon: "✅", wort: "Prüfen" },
+    handeln: { icon: "➜", wort: "Handeln" }
+  };
+  const e = map[key];
+  return e ? `<span class="station-badge"><span aria-hidden="true">${e.icon}</span>${e.wort}</span>` : "";
 }
 
 function renderLesson() {
@@ -4138,7 +4246,7 @@ function renderLesson() {
 
   /* Die .progress-area bleibt aus: sie ist eine eigene Karte mit Meta-Zeile und
      kostet 77 px – mehr als die Punkte-Reihe, die sie ersetzen sollte. Der
-     schlanke Balken steckt stattdessen in buildStepPath (rund 44 px). */
+     schlanke Balken steckt stattdessen im Wegweiser (buildProgress, rund 44 px). */
   setProgressVisible(false);
   /* Die untere Leiste bleibt auf JEDEM Lernschritt stehen (Prüfbericht B2).
      Vorher wurde sie bei Lektionen mit Übung ausgeblendet – damit war sie auf
@@ -4158,11 +4266,6 @@ function renderLesson() {
   saveLastLesson();
   showNav(true, !hasPractice, currentStep === lessons.length - 1 ? "Fertig" : "Weiter");
 
-  /* Vorlese-Knopf je Block: Vorlesen als selbstbestimmtes Angebot an jeder
-     Kachel (§1 Selbstbestimmung, §3 Vorlesen als Wahl). Liest genau diesen Block. */
-  const blockRead = (t) => t
-    ? `<span class="card-read-button card-read-button--block" role="button" tabindex="0" data-read-card-text="${escapeHtml(t)}" aria-label="Diesen Teil vorlesen"><svg class="rb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L9 9H4z" fill="currentColor"/><path d="M16 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.6 6.2a7 7 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`
-    : "";
   const plain = (arr) => Array.isArray(arr)
     ? arr.map(i => (typeof i === "object" && i.text) ? i.text : i).join(" ")
     : "";
@@ -4251,7 +4354,7 @@ function renderLesson() {
 
   content.innerHTML = `
     ${buildToolRow()}
-    ${buildStepPath(currentStep, lessons.length)}
+    ${buildWegweiser(`Du lernst: ${topic.title}. Das ist Schritt ${currentStep + 1} von ${lessons.length}.`, { index: currentStep, total: lessons.length })}
     ${moduleBadge}
     <article class="card lesson-card page-flip page-flip--${pageDirection}${isEinfachLesson ? " lesson-card--einfach" : ""}" style="${getTopicColorStyle(topic.id)}" data-readable="true">
       ${pictogram}
@@ -4267,6 +4370,7 @@ function renderLesson() {
       ${examples}
       ${warning}
       ${success}
+      ${stationBadge("merken")}
       ${remember}
       ${practice}
     </article>
@@ -4368,7 +4472,8 @@ function renderPracticeFeedbackPage(index, correctIndex) {
             Das ist keine reine Umstellung, sondern eine kleine Verbesserung — die
             Frage "gibt es überhaupt einen Merksatz?" gehört in den Baustein, nicht
             an jede Aufrufstelle. */""}
-      ${isCorrect ? buildRememberBox("Wichtig", practice.remember, { vorlesen: false }) : ""}
+      ${stationBadge("merken")}
+      ${isCorrect ? buildRememberBox("Wichtig", practice.remember) : ""}
       ${regelHinweis}
 
       <div class="feedback-actions">
@@ -4435,31 +4540,6 @@ function continueAfterPractice() {
 /* ============================================================
    Abschlussseite
    ============================================================ */
-
-/* Fortschritts-Rückmeldung direkt nach dem Erfolg (Bandura: unmittelbares
-   Erfolgserlebnis). Bietet – falls noch nicht aktiv – das freiwillige
-   Merken des Lernstands genau in dem Moment an, in dem es Sinn ergibt. */
-function buildCompletionProgress() {
-  const done = countDoneTopics();
-  const saveOffer = !isProgressEnabled() ? `
-    <div class="progress-consent">
-      <p class="progress-consent-title">Soll ich mir merken, welche Themen du geschafft hast?</p>
-      <p class="progress-consent-note">Das wird nur auf diesem Gerät gespeichert. Ohne Namen. Du kannst es jederzeit löschen.</p>
-      <button type="button" class="utility-button" onclick="enableProgressInline(this)">Ja, Lernstand merken</button>
-    </div>` : "";
-  return `
-    ${buildGrandFinish()}
-    <div class="hero-progress-row" role="region" aria-label="Dein Lernfortschritt">
-      <div class="hero-progress-numbers">
-        <span class="hero-progress-count">${done}</span>
-        <span class="hero-progress-of">von ${topics.length} Themen geschafft</span>
-      </div>
-      <div class="hero-progress-track" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${topics.length}" aria-label="${done} von ${topics.length} Themen">
-        <div class="hero-progress-fill" style="width:${Math.round((done / topics.length) * 100)}%"></div>
-      </div>
-    </div>
-    ${saveOffer}`;
-}
 
 /* ------------------------------------------------------------
    Kurze Frage nach den Lektionen (vor der Abschluss-Seite)
@@ -4605,6 +4685,24 @@ function bindClosingSelfCheck(topic) {
   });
 }
 
+/* Station 5 (P6): „Hilfe nochmal lesen" auf der Abschlussseite der drei
+   sensiblen Themen (hilfe, betrug, ki). Öffnet die erste Lektion des
+   Hilfe-Moduls („Hilfe" bei betrug/ki, „Unterstützung" bei hilfe) — der
+   Index wird aus den Daten gesucht, nicht fest eingetragen. Mechanik wie
+   die Themen-Seite (startTopicMode/resumeLastLesson): Ziel setzen, dann
+   renderLesson(). Die Einstiegsfrage wird übersprungen — das Thema ist
+   geschafft, die Person will nur nachlesen. */
+function openTopicHelpLesson(topicId) {
+  const topic = getTopicById(topicId);
+  if (!topic || !Array.isArray(topic.lessons)) return renderMenu();
+  const idx = topic.lessons.findIndex(l => l && (l.module === "Hilfe" || l.module === "Unterstützung"));
+  rememberTopicAmount(topic.id, "full");
+  currentTopicId = topic.id;
+  currentMode = "full";
+  currentStep = idx >= 0 ? idx : 0;
+  renderLesson();
+}
+
 function renderCompletionPage(topicId) {
   stopReading();
   const topic = getTopicById(topicId);
@@ -4641,6 +4739,7 @@ function renderCompletionPage(topicId) {
           </div>
 
           <h2 class="einfach-done-title">Super gemacht!</h2>
+          ${roleFigure("erfolg")}
 
           <p class="einfach-done-text">Du hast gelernt:</p>
           <p class="einfach-done-topic"><strong>${escapeHtml(topic.title)}</strong></p>
@@ -4650,14 +4749,15 @@ function renderCompletionPage(topicId) {
           ${buildGoalsDone(topic)}
 
           ${topic.transfer ? `
+          ${stationBadge("handeln")}
           <div class="access-box remember remember-box">
-            <h3>Eine Sache für heute</h3>
+            <h3>DEINE eine Sache für heute</h3>
             <p class="remember-text">${escapeHtml(topic.transfer)}</p>
           </div>` : ""}
 
           ${buildClosingSelfCheck(topic)}
 
-          ${buildCompletionProgress()}
+          ${buildProgress(countDoneTopics(), topics.length, { complete: true })}
 
           <div class="einfach-done-actions">
             ${/* Hauptaktion des KURZEN Wegs ist der lange Weg zum selben Thema
@@ -4669,19 +4769,21 @@ function renderCompletionPage(topicId) {
             </button>
             ${nextActionHtml("einfach-done-btn").replace("primary-action", "secondary-action")}
             ${getQuizQuestions(topic).length
-              ? `<button type="button" class="secondary-action einfach-done-btn" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
+              ? `<button type="button" class="action-chip" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
                    Quiz machen
                  </button>`
               : ""}
-            <button type="button" class="ghost-action einfach-done-btn" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
-              Nochmal von vorne
-            </button>
-            <button type="button" class="ghost-action einfach-done-btn" onclick="renderMyPath()">
-              Mein Lernweg ansehen
-            </button>
-            <button type="button" class="ghost-action einfach-done-btn" onclick="renderMenu()">
-              Zur Themenübersicht
-            </button>
+            <div class="completion-links">
+              <button type="button" class="link-action" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
+                Nochmal von vorne
+              </button>
+              <button type="button" class="link-action" onclick="renderMyPath()">
+                Mein Lernweg ansehen
+              </button>
+              <button type="button" class="link-action" onclick="renderMenu()">
+                Zur Themenübersicht
+              </button>
+            </div>
           </div>
 
         </article>
@@ -4710,6 +4812,7 @@ function renderCompletionPage(topicId) {
         </div>
 
         <p>Du hast das Thema <strong>${escapeHtml(topic.title)}</strong> geschafft.</p>
+        ${roleFigure("erfolg")}
 
         ${buildGoalsDone(topic)}
 
@@ -4719,23 +4822,29 @@ function renderCompletionPage(topicId) {
         </ul>
 
         ${topic.transfer ? `
+        ${stationBadge("handeln")}
         <div class="access-box remember remember-box">
-          <h3>Eine Sache für heute</h3>
+          <h3>DEINE eine Sache für heute</h3>
           <p class="remember-text">${escapeHtml(topic.transfer)}</p>
         </div>` : ""}
 
         ${buildClosingSelfCheck(topic)}
 
-        ${buildCompletionProgress()}
+        ${buildProgress(countDoneTopics(), topics.length, { complete: true })}
 
         <div class="completion-actions">
           ${nextActionHtml()}
           <p class="completion-more-title">Zu diesem Thema gibt es außerdem:</p>
-          <button type="button" class="secondary-action" onclick="startQuiz('${escapeHtml(topic.id)}')">Quiz machen</button>
-          <button type="button" class="secondary-action" onclick="renderMemoryCard('${escapeHtml(topic.id)}')">Merk-Karte ansehen</button>
-          <button type="button" class="ghost-action" onclick="renderCertificate('${escapeHtml(topic.id)}')">Urkunde ansehen</button>
-          <button type="button" class="ghost-action" onclick="renderMyPath()">Mein Lernweg ansehen</button>
-          <button type="button" class="ghost-action" onclick="renderMenu()">Zur Themenübersicht</button>
+          <div class="action-chip-row">
+            <button type="button" class="action-chip" onclick="startQuiz('${escapeHtml(topic.id)}')">Quiz machen</button>
+            <button type="button" class="action-chip" onclick="renderMemoryCard('${escapeHtml(topic.id)}')">Merk-Karte ansehen</button>
+            ${["hilfe", "betrug", "ki"].includes(topic.id) ? `<button type="button" class="action-chip" onclick="openTopicHelpLesson('${escapeHtml(topic.id)}')">Hilfe nochmal lesen</button>` : ""}
+          </div>
+          <div class="completion-links">
+            <button type="button" class="link-action" onclick="renderCertificate('${escapeHtml(topic.id)}')">Urkunde ansehen</button>
+            <button type="button" class="link-action" onclick="renderMyPath()">Mein Lernweg ansehen</button>
+            <button type="button" class="link-action" onclick="renderMenu()">Zur Themenübersicht</button>
+          </div>
         </div>
       </article>
     </section>
@@ -4896,12 +5005,14 @@ function renderEinfachQuizResult() {
         <button type="button" class="primary-action einfach-done-btn" onclick="startEinfachQuiz('${escapeHtml(topic.id)}')">
           Quiz nochmal
         </button>
-        <button type="button" class="secondary-action einfach-done-btn" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
-          Lektionen nochmal
-        </button>
-        <button type="button" class="ghost-action einfach-done-btn" onclick="renderMenu()">
-          Zur Themenübersicht
-        </button>
+        <div class="completion-links">
+          <button type="button" class="link-action" onclick="startTopicMode('${escapeHtml(topic.id)}', 'short')">
+            Lektionen nochmal
+          </button>
+          <button type="button" class="link-action" onclick="renderMenu()">
+            Zur Themenübersicht
+          </button>
+        </div>
       </div>
     </article>
   `;
@@ -4946,6 +5057,7 @@ function renderQuizQuestion() {
            Satz, hier). Die Ueberschrift bleibt fuer Screenreader und die
            Gliederung erhalten, kostet aber keinen Platz mehr. -->
       <h2 class="sr-only">Quiz</h2>
+      ${stationBadge("pruefen")}
       ${questionPikto(q)}<p class="quiz-question">${escapeHtml(q.question || "")}</p>
       ${buildTaskHelpBox(taskHint(q, "quiz"), true)}
       <div class="answers">${answerHtml}</div>
@@ -5005,6 +5117,7 @@ function renderQuizFeedbackPage(index) {
         <h3>Erklärung:</h3>
         <p>${escapeHtml(explanation)}</p>
       </div>
+      ${!isCorrect ? roleFigure("ruhig") : ""}
 
       ${regelHinweis}
 
@@ -5048,9 +5161,17 @@ function renderQuizResult() {
     ${buildToolRow()}
     <article class="card quiz-result-card" data-readable="true">
       <h2>Quiz fertig</h2>
+      ${stationBadge("pruefen")}
       <p>Du hast ${quizScore} von ${total} Fragen richtig beantwortet.</p>
       <p>Das sind ${percent} Prozent.</p>
       <p>Wichtig ist: Du hast geübt.</p>
+      ${(topic && Array.isArray(topic.helpQuestions) && topic.helpQuestions.length) ? `
+      <div class="selfcheck-box">
+        <h3>Prüfe dich selbst:</h3>
+        <ul class="selfcheck-list">
+          ${topic.helpQuestions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
+        </ul>
+      </div>` : ""}
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="renderCertificate('${escapeHtml(currentTopicId)}', ${quizScore}, ${total})">Urkunde ansehen</button>
         <button type="button" class="nav-button secondary" onclick="startQuiz('${escapeHtml(currentTopicId)}')">Quiz wiederholen</button>
@@ -5380,6 +5501,7 @@ function startTrainingInbox() {
   content.innerHTML = `
     ${buildToolRow()}
     <article class="card training-card" data-readable="true">
+      ${stationBadge("pruefen")}
       <div class="symbol-heading">
         <span class="access-box-symbol" aria-hidden="true">${getIconHtml("message")}</span>
         <h2>Trainings-Postfach</h2>
@@ -5403,7 +5525,7 @@ function startTrainingInbox() {
           <h3>Dein Postfach</h3>
           <p class="remember-text">Du hast ${geschafft.length} ${geschafft.length === 1 ? "Thema" : "Themen"} geschafft. Deshalb liegen ${pool.length} Nachrichten in deinem Postfach.${pool.length > POSTFACH_MAX ? ` Du bekommst ${POSTFACH_MAX} davon – jedes Mal andere.` : ""}</p>
         </div>
-        ${buildRememberBox("Wichtig", "Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
+        ${buildRememberBox("Wichtig", "Alle Nachrichten hier sind erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.")}
         <div class="certificate-actions">
           <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">${anzahl} Nachrichten prüfen</button>
           <button type="button" class="nav-button secondary" onclick="renderMenu()">Zur Themenübersicht</button>
@@ -5586,7 +5708,7 @@ function renderTrainingResult() {
       <p>${escapeHtml(lob)}</p>
       ${themen.length ? `<p>Die Nachrichten kamen aus: ${escapeHtml(themen.join(", "))}.</p>` : ""}
       ${waechst}
-      ${buildRememberBox("Wichtig", "Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Bekommst du wirklich so eine Nachricht? Zeige sie einer Person, der du vertraust. Du musst nichts allein entscheiden.")}
       <div class="certificate-actions">
         <button type="button" class="quiz-link quiz-button" onclick="beginTraining()">Noch einmal üben</button>
         <button type="button" class="nav-button secondary" onclick="renderRegelKarte()">Deine Karte ansehen</button>
@@ -5872,12 +5994,13 @@ function startScenario(topicId) {
   content.innerHTML = `
     ${buildToolRow()}
     <article class="card scenario-card" style="${getTopicColorStyle(topic.id)}" data-readable="true">
+      ${stationBadge("pruefen")}
       <div class="symbol-heading">
         <span class="access-box-symbol" aria-hidden="true">${getIconHtml(topic.icon || "start")}</span>
         <h2>Übungs-Handy: ${escapeHtml(scn.titel || topic.title)}</h2>
       </div>
       ${(scn.einstieg || []).map(s => `<p>${escapeHtml(s)}</p>`).join("")}
-      ${buildRememberBox("Wichtig", "Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Alles hier ist erfunden. Es gibt keine Zeit-Grenze. Fehler sind erlaubt. Du kannst jederzeit aufhören.")}
       ${rundenWahl}
       <div class="certificate-actions">
         ${rundenWahl ? "" : `<button type="button" class="quiz-link quiz-button" onclick="beginScenario()">Üben starten</button>`}
@@ -6099,7 +6222,7 @@ function renderScenarioResult() {
         <h3>Das nimmst du mit</h3>
         <ul class="sz-merkliste">${merksaetze}</ul>
       </div>` : ""}
-      ${buildRememberBox("Wichtig", "Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.", { vorlesen: false })}
+      ${buildRememberBox("Wichtig", "Passiert dir so etwas wirklich? Zeige es einer Person, der du vertraust. Du musst nichts allein entscheiden.")}
       <div class="certificate-actions">
         ${(naechste && bestanden)
           ? `<button type="button" class="quiz-link quiz-button" onclick="beginScenario(${naechste})">${escapeHtml(stufenName(naechste))} starten</button>`

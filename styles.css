@@ -1005,20 +1005,33 @@ html.no-motion *::after {
 /* Alex-&-Tilda-Rollen-Figuren (bedeutungstragend, mit Alt-Text) */
 .role-figure {
   display: block;
-  width: 100%;
-  max-width: 300px;
+  /* Breite UND Hoehe deckeln, Seitenverhaeltnis bleibt erhalten.
+     Grund: Die Wegzeichen-Figuren von Paket W sind Hochformat (bis 1:2,3),
+     die aelteren Rollen-Bilder Querformat (640x357). Nur mit einem
+     Breiten-Deckel wurde die Themen-Seite auf dem Handy 499 px hoch
+     zugebaut - kein einziges Thema war noch sichtbar (§3: ein Konzept
+     pro Bildschirm). Der Hoehen-Deckel macht aus jeder Figur wieder ein
+     Wegzeichen statt eines Bildschirm-Fuellers.
+     width/height auto ist noetig, damit der Browser beide Deckel
+     gemeinsam aufloest; min(...) haelt schmale Geraete frei von
+     seitlichem Ueberlauf. Querformat-Bilder bleiben unveraendert, sie
+     sind bei 300 px Breite nur 168 px hoch und stossen nie an. */
+  width: auto;
+  height: auto;
+  max-width: min(300px, 100%);
+  max-height: 240px;
   margin: 6px auto 14px;
   border-radius: var(--radius-m);
   border: 1px solid var(--line);
 }
 
 .support-help-panel .role-figure {
-  max-width: 200px;
+  max-width: min(200px, 100%);
   margin: 4px auto 16px;
 }
 
 .certificate-card .role-figure {
-  max-width: 260px;
+  max-width: min(260px, 100%);
   margin: 4px auto 12px;
 }
 
@@ -1419,6 +1432,56 @@ html.no-motion *::after {
 }
 .intro-word p { margin: 0; }
 
+/* Station 0 – Lern-Leitsatz „So lernst du." direkt unter der Begrüßung
+   (docs/gesamtlernprinzip-stationen.md §0.1). Schlichte Zeile ohne Kasten (F1). */
+.intro-principle-plain {
+  margin: 12px 0 10px;
+  text-align: left;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* Einklappbare Angebots-Details (F1) */
+.intro-more {
+  margin: 16px 0 0;
+  text-align: left;
+}
+.intro-more summary {
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.intro-more summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+.intro-more[open] summary {
+  margin-bottom: 8px;
+}
+
+/* Stations-Etikett (Faden Merken → Prüfen → Handeln), siehe app.js stationBadge() */
+.station-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 4px 10px;
+  margin: 10px 0 6px;
+}
+
+/* Selbst-Prüffragen (helpQuestions) im Quiz-Ergebnis — Station 4 */
+.selfcheck-box { margin: 14px 0; text-align: left; }
+.selfcheck-box h3 { margin: 0 0 8px; }
+.selfcheck-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+
 /* Übersicht „Das kannst du hier machen" */
 .intro-offer {
   margin: 18px 0 8px;
@@ -1710,6 +1773,7 @@ html.no-motion *::after {
   transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .device-card:hover { border-color: var(--accent); background: var(--surface-soft); transform: translateY(-2px); }
+.device-card.is-active { border-color: var(--accent); background: var(--surface-soft); box-shadow: var(--shadow); }
 .device-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .device-card strong { font-size: 1.2rem; color: var(--ink); }
 .device-card span:last-child { font-size: 0.98rem; color: var(--ink-soft); }
@@ -1751,6 +1815,47 @@ html.no-motion *::after {
 .step-path--small .step-dot { width: 20px; height: 20px; font-size: 0.72rem; border-width: 2px; }
 .step-path--small .step-dot.is-current { width: 26px; height: 26px; font-size: 0.85rem; box-shadow: 0 0 0 3px var(--accent-soft); }
 /* Schlanker Fortschrittsbalken statt bis zu 13 nummerierter Kreise. */
+/* Wegweiser-Karte (Paket V, §2.2): Ort-Satz und Fortschritt in einem
+   Block. Nur Design-Tokens – keine festen Farbwerte, damit Hell- und
+   Dunkelmodus aus demselben Code kommen. Der Farbfaden links erbt
+   --topic-color von .app (gesetzt in setPageTopicColor). */
+.wegweiser {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--topic-color, var(--accent));
+  border-radius: var(--radius-s);
+}
+
+.wegweiser-ort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 1.02rem;
+}
+
+.wegweiser .step-bar-wrap { margin: 0; }
+
+/* Solange eine Seite den Wegweiser zeigt, tritt #orientLine visuell
+   zurück – der Ort-Satz steht dann sichtbar IN der Karte. Die Zeile
+   bleibt im DOM, bleibt Live-Region und bleibt das erste Vorlese-
+   Element; sie wird nur unsichtbar (sr-only-Muster, bewusst KEINE
+   .is-hidden-Klasse, damit das Vorlesen sie weiter findet). */
+.app:has(#content .wegweiser) #orientLine {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .step-bar-wrap { margin: 0 0 14px; }
 
 .step-bar {
@@ -2292,9 +2397,21 @@ html.no-motion *::after {
   height: 18px;
 }
 
+/* Block-Vorlese-Knöpfe: leise Feinwerkzeuge (Paket H). Trefffläche und
+   Größe bleiben unverändert (§9), nur die Optik tritt zurück. Mit Maus
+   erscheinen sie erst beim Überstreichen des Blocks, mit Tastatur
+   sofort voll sichtbar, auf Touch-Geräten dauerhaft sichtbar-leise. */
 .card-read-button--block {
   margin-top: 10px;
   background: transparent;
+  opacity: .55;
+  transition: opacity .18s;
+}
+@media (hover: hover) {
+  .card-read-button--block { opacity: 0; }
+  .ls-text-block:hover .card-read-button--block,
+  .ls-bullet-block:hover .card-read-button--block,
+  .access-box:hover .card-read-button--block { opacity: 1; }
 }
 .ls-text-block,
 .ls-bullet-block {
@@ -2312,6 +2429,7 @@ html.no-motion *::after {
 .card-read-button--block:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+  opacity: 1;
 }
 
 /* Sanftes „Blättern" beim Seitenwechsel: weiches Überblenden + kleine
@@ -2533,41 +2651,150 @@ html.no-motion *::after {
 /* Eine Bedien-Zeile statt zweier gestapelter Karten: Vorlesen links,
    "Sprache und Pause" daneben. Spart auf jedem Bildschirm rund 90 px
    ueber dem Inhalt (§3 Cognitive Load: keine Wand vor dem Lernstoff). */
+/* ============================================================
+   Bedien-Zeile (Paket G): EINE Hierarchie auf jedem Screen.
+   Primaer = Vorlese-Pille (laut), Sekundaer = Chip-Gruppe (leise).
+   Design-System-Regel ab jetzt: Primaeraktionen als Pille mit
+   Icon-Muenze, Sekundaeraktionen als Chips in einer Kapsel.
+   WICHTIG: Die Optik haengt an den Bausteinen (.reading-button,
+   .utility-chip), NICHT an .tool-row. Grund: buildReadingToolbar()
+   wird 15x direkt aufgerufen, ohne Zeilen-Wrapper – haenge man das
+   Aussehen an .tool-row, staenden diese 15 Pillen unformatiert da.
+   .tool-row regelt nur noch die Anordnung der beiden Gruppen.
+   So sieht die Bedienung ueberall gleich aus (§3 Vorhersehbarkeit).
+   ============================================================ */
 .tool-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 14px;
 }
 
-/* Beide Teilleisten loesen sich in der gemeinsamen Zeile auf, damit ihre
-   Knoepfe als EIN Satz umbrechen. Sonst bliebe "Pause machen" an den breiten
-   Sprach-Knopf gekettet und die Leiste braeuchte drei Zeilen statt zwei. */
-.tool-row .reading-toolbar,
-.tool-row .utility-bar {
-  display: contents;
-}
+/* Die Vorlese-Leiste loest sich auf, damit die Pille selbst zum
+   Flex-Kind der Zeile wird. Die Chip-Leiste bleibt ein eigener
+   Container: nur so stossen ihre Chips zur Kapsel aneinander –
+   mit display:contents wuerde space-between sie auseinanderziehen. */
+.tool-row .reading-toolbar { display: contents; }
 
-.tool-row .reading-button {
+.tool-row .utility-bar { margin: 0; }
+
+/* — Vorlese-Pille — */
+.reading-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   flex: 0 0 auto;
   min-width: 0;
-  min-height: 58px;   /* gleiche Hoehe wie der Umschalter daneben, §9 */
+  min-height: 58px;                 /* §9 Zielgroesse */
+  padding: 7px 18px 7px 7px;
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);        /* hoechster Kontrast auf --accent-soft, hell wie dunkel */
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
 }
 
-.tool-row .reading-status:empty {
-  display: none;
+.reading-button:hover { border-color: var(--accent); }
+
+.rb-coin {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);          /* NICHT #fff: im Dark Mode ist --accent hell */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tool-row .reading-status {
-  flex-basis: 100%;
-  margin: 0;
+.rb-ico,
+.reading-button .rb-eq { width: 20px; height: 20px; }
+
+.reading-button .rb-eq { display: none; align-items: flex-end; gap: 2.5px; }
+
+/* Ruhehoehen bewusst ungleich: faellt die Animation weg (html.no-motion,
+   prefers-reduced-motion), steht trotzdem ein erkennbarer Equalizer da
+   und keine flache Linie. */
+.reading-button .rb-eq i { width: 3px; border-radius: 2px; background: currentColor; height: 7px; }
+.reading-button .rb-eq i:nth-child(2) { height: 14px; }
+.reading-button .rb-eq i:nth-child(3) { height: 9px; }
+.reading-button .rb-eq i:nth-child(4) { height: 16px; }
+
+.rb-stop { display: none; width: 11px; height: 11px; border-radius: 2px; background: currentColor; margin-left: 2px; }
+
+/* Aktiv: Pille gefuellt, Equalizer laeuft, Stopp-Quadrat sagt, was ein Druck tut. */
+.reading-button.is-active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.reading-button.is-active .rb-ico-speak { display: none; }
+.reading-button.is-active .rb-eq { display: inline-flex; }
+.reading-button.is-active .rb-stop { display: inline-block; }
+.reading-button.is-active .rb-coin {
+  background: transparent;                                          /* Rueckfall, falls color-mix fehlt */
+  background: color-mix(in srgb, var(--on-accent) 20%, transparent); /* tokenbasiert, in beiden Modi richtig */
+  color: var(--on-accent);
+}
+.reading-button.is-active .rb-eq i { animation: rb-eqbar 1s ease-in-out infinite; }
+.reading-button.is-active .rb-eq i:nth-child(2) { animation-delay: .18s; }
+.reading-button.is-active .rb-eq i:nth-child(3) { animation-delay: .36s; }
+.reading-button.is-active .rb-eq i:nth-child(4) { animation-delay: .1s; }
+
+@keyframes rb-eqbar { 0%, 100% { height: 5px } 50% { height: 15px } }
+/* html.no-motion killt die Animation global (animation: none !important);
+   die ungleichen Ruhehoehen oben bleiben sichtbar. */
+
+/* — Chip-Gruppe (Pause, Sprache) — */
+.utility-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 0 14px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+}
+.utility-chip + .utility-chip { border-left: none; border-radius: 0; margin-left: -1.5px; }
+.utility-chip:first-child { border-radius: 99px 0 0 99px; }
+.utility-chip:last-child { border-radius: 0 99px 99px 0; }
+.utility-chip:only-child { border-radius: 99px; }
+.utility-chip svg { width: 17px; height: 17px; flex: none; }
+.utility-chip:hover { color: var(--ink); background: var(--accent-soft); }
+
+/* Fokus kommt aus der globalen :focus-visible-Regel (4 px --focus, §9) –
+   hier bewusst KEIN eigener Rahmen, sonst haette dieselbe Tastatur-
+   Bedienung auf dieser Zeile eine andere Farbe als auf jeder anderen. */
+
+/* Status-Text: verlaesst das Layout, bleibt fuer Screenreader da.
+   Die sichtbare Information steckt jetzt im Zustand der Pille. */
+.reading-status {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
+/* Chip-Kapsel (Paket G) – gilt auch fuer den einen Aufruf ausserhalb
+   einer .tool-row, damit die Gruppe nirgends auseinanderfaellt. */
 .utility-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
   margin-bottom: 14px;
 }
 
@@ -2630,62 +2857,11 @@ html.no-motion *::after {
   margin-bottom: 14px;
 }
 
-.reading-button {
-  /* Seit der Umstellung auf EINEN Umschalter darf der Knopf nicht mehr die
-     ganze Zeile fuellen: sonst ist er auf den Tab-Seiten 370 px breit und in
-     der Bedien-Zeile einer Lektion 131 px – derselbe Knopf in zwei Formen.
-     Gleiche Funktion, gleiches Aussehen auf jeder Seite (§3 Vorhersehbarkeit). */
-  flex: 0 0 auto;
-  min-width: 130px;
-  min-height: 58px;   /* §9: gleiche Hoehe wie alle anderen Bedienelemente */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 10px 16px;
-  font-size: 0.98rem;
-  font-weight: 700;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  cursor: pointer;
-}
-
-.reading-button:hover {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-/* Wird nicht mehr als eigener Knopf gerendert – die Regel bleibt, weil der
-   Vorlese-Umschalter im aktiven Zustand genau dieses Aussehen übernimmt. */
-.reading-button-stop,
-.reading-button-normal.is-active {
-  border-color: var(--bad);
-  background: var(--bad-bg);
-  color: var(--bad);
-}
-
-.reading-button-stop:hover,
-.reading-button-normal.is-active:hover {
-  background: var(--bad);
-  color: #ffffff;
-}
-
-/* Aktiver Knopf leuchtet grün: man sieht immer, was gerade läuft. */
-.reading-button.is-active,
-.reading-button.is-active:hover {
-  background: var(--good);
-  color: #ffffff;
-  border-color: var(--good);
-}
-
-/* Status-Text in eine eigene Zeile unter die Knöpfe. */
-.reading-toolbar .reading-status {
-  flex-basis: 100%;
-  width: 100%;
-  margin: 2px 0 0;
-}
+/* Die alte .reading-button-Basis (Pillen-Umriss, Warn-Rot fuer "Stopp",
+   Gruen fuer aktiv) ist mit Paket G entfallen: Aussehen und Zustand
+   liegen jetzt vollstaendig in den .tool-row-Regeln oben, und der Knopf
+   kommt nur dort vor. Die Regeln standen hier verwaist herum und haetten
+   dem neuen Aktiv-Zustand ihre Farben untergeschoben. */
 
 /* Mitlesen: der gerade vorgelesene Satz/Abschnitt wird mit einem klaren
    Rahmen markiert – KEIN Hintergrund, damit die Schrift voll lesbar bleibt
@@ -2697,11 +2873,7 @@ html.no-motion *::after {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-.reading-status {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--ink-soft);
-}
+/* .reading-status wird oben (Paket G) global auf sr-only gesetzt. */
 
 .reading-unavailable {
   margin: 0;
@@ -3037,6 +3209,66 @@ p.feedback-wrong {
   font-size: 1rem;
   font-weight: 700;
   color: var(--ink-soft);
+}
+
+/* Paket H: Zusatz-Angebote als Chip-Reihe, Navigation als Text-Links.
+   Wortlaute und onclick bleiben unverändert; die Links bleiben echte
+   Buttons (Tastatur/Fokus wie Standard), nur die Optik ist Link. */
+.action-chip-row {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 16px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: color .2s, background .2s, border-color .2s;
+}
+.action-chip:hover {
+  color: var(--ink);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.completion-links {
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin-top: 6px;
+}
+
+.link-action {
+  background: none;
+  border: none;
+  padding: 8px 2px;
+  min-height: 44px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link-action:hover {
+  color: var(--ink);
+}
+
+/* Einfach-Weg: einzelner Chip in der schmalen Spalte linksbündig */
+.einfach-done-actions .action-chip {
+  align-self: flex-start;
 }
 
 /* ---- Einfach-Quiz ---- */
@@ -3642,12 +3874,6 @@ body.lesson-view .orient-line {
 
 .orient-text {
   flex: 1;
-}
-
-.card-read-button--orient {
-  flex: none;
-  min-width: 44px;
-  min-height: 44px;
 }
 
 .resume-lesson-wrap {
@@ -5157,6 +5383,26 @@ body.simple-mode .practice-box {
   border-radius: 999px;
   white-space: nowrap;
   z-index: 2;
+}
+.topic-start-badge--first,
+.topic-card .topic-start-badge--first {
+  background: var(--good);
+  color: var(--on-accent);
+}
+
+/* Chip Menü-Erinnerung beim ersten Themen-Besuch (F3) */
+.menu-hint-chip {
+  display: block;
+  max-width: fit-content;
+  margin: 20px auto 10px;
+  padding: 8px 18px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* Üben-Sektion unter den Themen */
